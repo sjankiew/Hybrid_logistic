@@ -39,7 +39,7 @@
     .signature-wrapper {
       position: relative;
       width: 100%;
-      height: 200px;
+      height: 150px;
       border: 2px dashed #cbd5e1;
       border-radius: 0.5rem;
       background-color: white;
@@ -50,7 +50,6 @@
       border-radius: 0.5rem;
     }
 
-    /* Layout tweaks */
     #app-container { height: 100dvh; display: flex; overflow: hidden; }
     #main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; position: relative; }
     #sidebar { transition: transform 0.3s ease; }
@@ -58,12 +57,33 @@
       #sidebar.mobile-open { transform: translateX(0); }
       #sidebar.mobile-closed { transform: translateX(-100%); }
     }
+    
+    .plan-item { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+
+    /* CSS Trick: ขยายพื้นที่ปุ่ม Calendar Icon (ตัวเลือกปฏิทิน) ให้เต็มกล่อง Input */
+    input[type="date"], input[type="month"] {
+      position: relative;
+      cursor: pointer;
+    }
+    input[type="date"]::-webkit-calendar-picker-indicator,
+    input[type="month"]::-webkit-calendar-picker-indicator {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0; /* ซ่อนไอคอนเดิมของระบบ แต่ยังคลิกได้เต็มพื้นที่ */
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
 
   <div id="app-container">
 
+    <!-- Sidebar -->
     <aside id="sidebar" class="w-64 bg-primary text-white flex flex-col absolute z-40 h-full md:relative mobile-closed md:translate-x-0 hidden">
       <div class="p-4 flex items-center justify-between border-b border-white/20">
         <div class="flex items-center gap-2">
@@ -79,8 +99,7 @@
           <p class="text-xs text-gray-300" id="profile-role">Role</p>
         </div>
       </div>
-      <nav class="flex-1 p-4 space-y-2 overflow-y-auto" id="sidebar-nav">
-        </nav>
+      <nav class="flex-1 p-4 space-y-2 overflow-y-auto" id="sidebar-nav"></nav>
       <div class="p-4 border-t border-white/20">
         <button onclick="App.logout()" class="flex items-center gap-2 text-red-300 hover:text-red-400 w-full p-2">
           <i data-lucide="log-out" class="w-5 h-5"></i> <span>ออกจากระบบ</span>
@@ -90,6 +109,7 @@
 
     <div id="main-content" class="pb-16 md:pb-0">
       
+      <!-- Top Header -->
       <header class="bg-white p-4 shadow-sm sticky top-0 z-30 flex justify-between items-center hidden" id="top-header">
         <div class="flex items-center gap-3">
           <button id="menu-btn" class="text-primary hidden" onclick="App.toggleSidebar()">
@@ -109,6 +129,7 @@
 
       <main class="w-full max-w-4xl mx-auto p-4 flex-1">
 
+        <!-- Login View -->
         <section id="view-login" class="view-section space-y-6 mt-10">
           <div class="flex justify-center mb-6 text-primary">
             <i data-lucide="box" class="w-16 h-16"></i>
@@ -118,67 +139,91 @@
             <div class="space-y-4">
               <input type="text" id="login-username" placeholder="รหัสผู้ใช้งาน (Username)" class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary">
               <input type="password" id="login-password" placeholder="รหัสผ่าน (Password)" class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary">
-              <button onclick="App.login()" class="w-full bg-primary text-white py-3 rounded-lg text-lg font-bold shadow hover:bg-opacity-90 transition-all">
-                เข้าสู่ระบบ
-              </button>
+              <button onclick="App.login()" class="w-full bg-primary text-white py-3 rounded-lg text-lg font-bold shadow hover:bg-opacity-90 transition-all">เข้าสู่ระบบ</button>
             </div>
           </div>
         </section>
 
+        <!-- Driver Route View -->
         <section id="view-route" class="view-section hidden space-y-4">
+          <div class="bg-blue-50 border border-blue-200 text-blue-800 p-3 rounded-lg text-sm mb-4 hidden" id="mileage-warning">
+            <i data-lucide="info" class="inline w-4 h-4 mr-1"></i> กรุณาบันทึกเลขไมล์เริ่มต้นก่อนเริ่มดูงานจัดส่ง
+          </div>
           <div id="route-list" class="space-y-4"></div>
         </section>
 
+        <!-- Task Detail View (Driver) -->
         <section id="view-task" class="view-section hidden space-y-4">
-          <button onclick="App.navigate('view-route')" class="flex items-center text-primary font-semibold mb-4 bg-white px-3 py-1 rounded-full shadow-sm">
+          <button onclick="App.navigate('view-route')" class="flex items-center text-primary font-semibold mb-4 bg-white px-3 py-1 rounded-full shadow-sm border border-gray-200 hover:bg-gray-50">
             <i data-lucide="arrow-left" class="w-5 h-5 mr-1"></i> กลับหน้ารายการ
           </button>
           
-          <div id="task-detail-container" class="bg-white p-5 rounded-xl shadow-md space-y-4 border-t-4 border-primary">
-            </div>
+          <div id="task-detail-container" class="bg-white p-5 rounded-xl shadow-md space-y-4 border-t-4 border-primary"></div>
           <div id="task-actions" class="space-y-3"></div>
           
+          <!-- Task Completion Form -->
           <div id="task-completion-form" class="bg-white p-5 rounded-xl shadow-md space-y-4 hidden mt-4 border border-gray-200">
             <h3 class="text-lg font-bold text-gray-800 border-b pb-2">บันทึกการส่งมอบ</h3>
+            
             <div>
-              <label class="block text-sm font-semibold mb-1">ภาพถ่ายสินค้า/สถานที่</label>
+              <label class="block text-sm font-semibold mb-1 text-primary">เลขไมล์รถ ณ จุดส่งมอบ (กม.)</label>
+              <input type="number" id="task-mileage" placeholder="เช่น 120500" class="w-full border rounded-lg p-2 text-sm bg-blue-50 border-blue-200 font-bold focus:ring-2 focus:ring-primary focus:outline-none">
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold mb-1">ภาพถ่ายสินค้า/สถานที่ <span class="text-xs text-red-500 font-normal">(จำเป็นหากส่งสำเร็จ)</span></label>
               <input type="file" id="task-photo" accept="image/*" capture="environment" class="w-full border rounded p-2 text-sm bg-gray-50">
               <img id="photo-preview" class="mt-2 rounded max-h-40 hidden object-cover border">
             </div>
             <div>
-              <label class="block text-sm font-semibold mb-1">ปัญหาที่พบ (ถ้ามี)</label>
-              <textarea id="task-problem" rows="2" class="w-full border rounded-lg p-2 text-sm bg-gray-50"></textarea>
+              <label class="block text-sm font-semibold mb-1">ปัญหาที่พบ (จำเป็นหากส่งไม่สำเร็จ)</label>
+              <textarea id="task-problem" rows="2" placeholder="ระบุสาเหตุถ้าส่งไม่สำเร็จ..." class="w-full border rounded-lg p-2 text-sm bg-gray-50"></textarea>
             </div>
             <div>
-              <label class="block text-sm font-semibold mb-1">ลายเซ็นผู้รับ</label>
+              <label class="block text-sm font-semibold mb-1">ลายเซ็นผู้รับ (จำเป็นหากส่งสำเร็จ)</label>
               <div class="signature-wrapper">
                 <canvas id="signature-pad"></canvas>
               </div>
               <button type="button" onclick="App.sigPad.clear()" class="text-sm text-red-500 mt-1"><i data-lucide="eraser" class="inline w-4 h-4"></i> ลบลายเซ็น</button>
             </div>
-            <button onclick="App.submitTaskComplete()" class="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-bold shadow-lg transition-colors">
-              ยืนยันปิดงาน
-            </button>
+            
+            <div class="grid grid-cols-2 gap-3 mt-4">
+              <button onclick="App.submitTaskComplete(false)" class="w-full bg-red-100 text-red-700 hover:bg-red-200 py-3 rounded-lg font-bold shadow-sm border border-red-300 transition-colors">
+                <i data-lucide="x-circle" class="inline w-5 h-5 mr-1"></i> ส่งไม่สำเร็จ
+              </button>
+              <button onclick="App.submitTaskComplete(true)" class="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-bold shadow-lg transition-colors">
+                <i data-lucide="check-circle" class="inline w-5 h-5 mr-1"></i> ส่งสำเร็จ
+              </button>
+            </div>
           </div>
         </section>
 
+        <!-- Driver Mileage View -->
         <section id="view-mileage" class="view-section hidden space-y-4">
           <div class="bg-white p-6 rounded-xl shadow-md space-y-4 border-t-4 border-primary">
+            <h2 class="text-xl font-bold text-primary mb-2"><i data-lucide="gauge" class="inline w-6 h-6 mr-1"></i> บันทึกเลขไมล์ประจำวัน</h2>
+            <div class="bg-yellow-50 text-yellow-800 text-xs p-3 rounded border border-yellow-200">
+              <b>คำแนะนำ:</b> ระบบจะทำการอัปเดตข้อมูลอัตโนมัติหากมีการบันทึกซ้ำในวันเดียวกัน
+            </div>
+            <input type="hidden" id="mile-log-id">
             <div>
               <label class="block text-sm font-semibold text-gray-700 mb-1">วันที่</label>
-              <input type="date" id="mile-date" class="w-full border rounded-lg p-2 bg-gray-100" readonly>
+              <div class="relative">
+                <i data-lucide="calendar" class="absolute left-3 top-2.5 w-5 h-5 text-gray-500 pointer-events-none"></i>
+                <input type="date" id="mile-date" class="w-full border rounded-lg pl-10 p-2 bg-gray-100" readonly>
+              </div>
             </div>
             <div>
               <label class="block text-sm font-semibold text-gray-700 mb-1">เลือกรถยนต์</label>
-              <select id="mile-vehicle" class="w-full border rounded-lg p-3 bg-gray-50"></select>
+              <select id="mile-vehicle" class="w-full border rounded-lg p-3 bg-gray-50 focus:ring-1 focus:ring-primary" onchange="App.fetchLastMileage(this.value)"></select>
             </div>
             <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-1">เลขไมล์เริ่มต้น</label>
-              <input type="number" id="mile-start" class="w-full border rounded-lg p-3 text-lg font-mono bg-gray-50" placeholder="เช่น 125000">
+              <label class="block text-sm font-semibold text-gray-700 mb-1">เลขไมล์เริ่มต้น (เริ่มงาน)</label>
+              <input type="number" id="mile-start" class="w-full border border-gray-300 rounded-lg p-3 text-lg font-mono bg-white shadow-sm" placeholder="เช่น 125000">
             </div>
             <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-1">เลขไมล์สิ้นสุด</label>
-              <input type="number" id="mile-end" class="w-full border rounded-lg p-3 text-lg font-mono bg-gray-50" placeholder="เช่น 125150">
+              <label class="block text-sm font-semibold text-gray-700 mb-1">เลขไมล์สิ้นสุด (จบงาน)</label>
+              <input type="number" id="mile-end" class="w-full border border-gray-300 rounded-lg p-3 text-lg font-mono bg-white shadow-sm" placeholder="ใส่เมื่อจบวัน">
             </div>
             <button onclick="App.submitMileage()" class="w-full bg-primary hover:bg-opacity-90 text-white py-3 rounded-lg font-bold shadow mt-4 transition-colors">
               บันทึกเลขไมล์
@@ -186,91 +231,138 @@
           </div>
         </section>
 
-        <section id="view-customers" class="view-section hidden space-y-4">
-          <div class="bg-white p-5 rounded-xl shadow-sm space-y-3">
-            <h3 class="font-bold border-b pb-2 text-lg">เพิ่มข้อมูลลูกค้า / หมุดแผนที่</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <input type="text" id="cust-company" placeholder="ชื่อบริษัท (ถ้ามี)" class="border rounded-lg p-2 text-sm w-full bg-gray-50">
-              <input type="text" id="cust-department" placeholder="หน่วยงาน (ถ้ามี)" class="border rounded-lg p-2 text-sm w-full bg-gray-50">
-              <input type="text" id="cust-name" placeholder="ชื่อลูกค้าผู้ติดต่อ" class="border rounded-lg p-2 text-sm w-full bg-gray-50">
-              <input type="text" id="cust-phone" placeholder="เบอร์โทรศัพท์" class="border rounded-lg p-2 text-sm w-full bg-gray-50">
-              <input type="email" id="cust-email" placeholder="อีเมล (Email)" class="border rounded-lg p-2 text-sm w-full bg-gray-50 md:col-span-2">
+        <!-- Dashboard View (Admin) -->
+        <section id="view-dashboard" class="view-section hidden space-y-4">
+          <div class="bg-white p-5 rounded-xl shadow-sm mb-4">
+            <div class="flex justify-between items-center mb-3">
+              <h3 class="font-bold text-lg text-primary flex items-center gap-2"><i data-lucide="layout-dashboard" class="w-5 h-5"></i> ภาพรวมการจัดส่ง</h3>
             </div>
-            <textarea id="cust-address" placeholder="ที่อยู่ (สำหรับออกเอกสาร)" rows="2" class="w-full border rounded-lg p-2 text-sm bg-gray-50"></textarea>
+            <div class="flex gap-2 bg-gray-100 p-1 rounded-lg">
+              <button onclick="App.setDashFilter('day')" id="btn-dash-day" class="flex-1 py-1 text-sm font-bold rounded-md bg-white shadow text-primary">รายวัน</button>
+              <button onclick="App.setDashFilter('month')" id="btn-dash-month" class="flex-1 py-1 text-sm font-bold rounded-md text-gray-500 hover:bg-gray-200">รายเดือน</button>
+              <button onclick="App.setDashFilter('year')" id="btn-dash-year" class="flex-1 py-1 text-sm font-bold rounded-md text-gray-500 hover:bg-gray-200">รายปี</button>
+            </div>
+            <div class="mt-3 relative">
+              <i data-lucide="calendar" class="absolute left-3 top-2.5 w-5 h-5 text-gray-400 pointer-events-none z-10"></i>
+              <input type="date" id="dash-date" class="w-full border border-gray-300 rounded-lg pl-10 p-2 text-sm bg-white focus:ring-2 focus:ring-primary focus:outline-none" onchange="App.renderDashboard()">
+            </div>
+          </div>
+
+          <div id="dashboard-stats" class="grid grid-cols-2 gap-3"></div>
+
+          <h3 class="font-bold text-gray-800 mt-6 border-b pb-2">ผลงานรายคัน (Progress)</h3>
+          <div id="dashboard-vehicles" class="space-y-3"></div>
+
+          <h3 class="font-bold text-red-600 mt-6 border-b pb-2"><i data-lucide="alert-circle" class="inline w-5 h-5 mr-1"></i>รายการที่จัดส่งไม่สำเร็จ</h3>
+          <div id="dashboard-failed" class="space-y-3"></div>
+        </section>
+
+        <!-- Expenses View (Admin) -->
+        <section id="view-expenses" class="view-section hidden space-y-4">
+          <!-- Filter Area & Cards -->
+          <div class="bg-white p-5 rounded-xl shadow-sm mb-4">
+            <div class="flex justify-between items-center mb-3">
+              <h3 class="font-bold text-lg text-primary flex items-center gap-2"><i data-lucide="wallet" class="w-5 h-5"></i> สรุปค่าใช้จ่าย</h3>
+            </div>
+            <div class="flex gap-2 bg-gray-100 p-1 rounded-lg mb-3">
+              <button onclick="App.setExpFilter('all')" id="btn-exp-all" class="flex-1 py-1 text-xs font-bold rounded-md bg-white shadow text-primary">ทั้งหมด</button>
+              <button onclick="App.setExpFilter('day')" id="btn-exp-day" class="flex-1 py-1 text-xs font-bold rounded-md text-gray-500 hover:bg-gray-200">รายวัน</button>
+              <button onclick="App.setExpFilter('month')" id="btn-exp-month" class="flex-1 py-1 text-xs font-bold rounded-md text-gray-500 hover:bg-gray-200">รายเดือน</button>
+              <button onclick="App.setExpFilter('year')" id="btn-exp-year" class="flex-1 py-1 text-xs font-bold rounded-md text-gray-500 hover:bg-gray-200">รายปี</button>
+            </div>
             
-            <div class="bg-blue-50 p-3 rounded-lg border border-blue-100 space-y-3">
-              <label class="text-sm font-bold text-blue-800 flex items-center gap-1">
-                <i data-lucide="map-pin" class="w-4 h-4"></i> พิกัดแผนที่ (ไม่ต้องใช้ API Key)
-              </label>
+            <div class="relative" id="exp-date-filter-container" style="display:none;">
+              <i data-lucide="calendar" class="absolute left-3 top-2.5 w-5 h-5 text-gray-400 pointer-events-none z-10"></i>
+              <input type="date" id="exp-date-filter" class="w-full border border-gray-300 rounded-lg pl-10 p-2 text-sm bg-white focus:ring-2 focus:ring-primary focus:outline-none" onchange="App.renderExpenses()">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3" id="expense-cards"></div>
+
+          <!-- Add Expense Form -->
+          <div class="bg-white rounded-xl shadow-md overflow-hidden mt-6">
+            <div class="bg-green-600 p-4 text-white flex justify-between items-center">
+              <h3 class="font-bold text-lg flex items-center gap-2"><i data-lucide="wallet" class="w-5 h-5"></i> เพิ่มรายการค่าใช้จ่าย</h3>
+            </div>
+            <div class="p-5 space-y-4 bg-gray-50">
               
-              <div class="text-xs text-gray-600 bg-white p-2 rounded border border-blue-100">
-                <b>วิธีที่ 1:</b> กดปุ่ม <a href="https://maps.google.com" target="_blank" class="text-blue-600 underline font-bold"><i data-lucide="external-link" class="inline w-3 h-3"></i> เปิด Google Maps</a> ค้นหาสถานที่ > คลิ๊กขวาที่จุดแดง > ก๊อปปี้ตัวเลขพิกัดมาวางในช่องด้านล่าง<br>
-                <b>วิธีที่ 2:</b> หากอยู่สถานที่จริง ให้กดปุ่ม "ดึงพิกัด GPS ปัจจุบัน"
+              <div>
+                <label class="text-sm font-bold text-gray-700 block mb-1">เลือกวันที่</label>
+                <div class="relative">
+                  <i data-lucide="calendar" class="absolute left-3 top-2.5 w-5 h-5 text-gray-400 pointer-events-none z-10"></i>
+                  <!-- CSS Trick will expand the clickable area of date picker -->
+                  <input type="date" id="exp-date" class="w-full border border-gray-300 rounded-lg pl-10 p-2.5 text-sm bg-white focus:ring-2 focus:ring-green-500 focus:outline-none" onchange="App.calcAutoDistance()">
+                </div>
               </div>
 
-              <input type="text" id="cust-latlng-input" placeholder="วางพิกัดที่นี่ เช่น 13.7563, 100.5018" class="border rounded-lg p-2 text-sm w-full bg-white shadow-sm border-blue-300 focus:ring-2 focus:ring-blue-400 focus:outline-none" oninput="App.splitLatLng(this.value)">
-              
-              <div class="flex gap-2 items-center">
-                <button onclick="App.getLocation()" class="text-sm bg-blue-600 text-white px-3 py-2 rounded-md hover:bg-blue-700 flex items-center gap-2 whitespace-nowrap shadow">
-                  <i data-lucide="crosshair" class="w-4 h-4"></i> ดึงพิกัด GPS
-                </button>
-                <input type="text" id="cust-lat" placeholder="Latitude" class="border rounded-lg p-2 text-xs w-1/2 bg-gray-100 text-gray-500" readonly>
-                <input type="text" id="cust-lng" placeholder="Longitude" class="border rounded-lg p-2 text-xs w-1/2 bg-gray-100 text-gray-500" readonly>
+              <div>
+                <label class="text-sm font-bold text-gray-700 block mb-1">เลือกป้ายทะเบียนรถ</label>
+                <div class="relative">
+                  <i data-lucide="car" class="absolute left-3 top-2.5 w-5 h-5 text-gray-400 pointer-events-none"></i>
+                  <select id="exp-vehicle" class="w-full border border-gray-300 rounded-lg pl-10 p-2.5 text-sm bg-white focus:ring-2 focus:ring-green-500 focus:outline-none" onchange="App.calcAutoDistance()"></select>
+                </div>
               </div>
+
+              <div>
+                <label class="text-sm font-bold text-gray-700 block mb-1">ระยะทางที่วิ่งในวัน (กม.)</label>
+                <div class="relative">
+                  <i data-lucide="map" class="absolute left-3 top-2.5 w-5 h-5 text-gray-400 pointer-events-none"></i>
+                  <input type="number" id="exp-distance" placeholder="ดึงให้อัตโนมัติ หรือ กรอกเอง" class="w-full border border-gray-300 rounded-lg pl-10 p-2.5 text-sm bg-white font-bold text-green-700">
+                </div>
+                <p class="text-[10px] text-gray-500 mt-1">* ระบบจะคำนวณอัตโนมัติหากคนขับกรอกเลขไมล์วันนั้นแล้ว</p>
+              </div>
+
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="text-sm font-bold text-gray-700 block mb-1">ค่าน้ำมัน (บาท)</label>
+                  <div class="relative">
+                    <i data-lucide="fuel" class="absolute left-3 top-2.5 w-5 h-5 text-gray-400 pointer-events-none"></i>
+                    <input type="number" id="exp-fuel" placeholder="0.00" class="w-full border border-gray-300 rounded-lg pl-10 p-2.5 text-sm bg-white">
+                  </div>
+                </div>
+                <div>
+                  <label class="text-sm font-bold text-gray-700 block mb-1">ค่าทางด่วน (บาท)</label>
+                  <div class="relative">
+                    <i data-lucide="ticket" class="absolute left-3 top-2.5 w-5 h-5 text-gray-400 pointer-events-none"></i>
+                    <input type="number" id="exp-toll" placeholder="0.00" class="w-full border border-gray-300 rounded-lg pl-10 p-2.5 text-sm bg-white">
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label class="text-sm font-bold text-gray-700 block mb-1">อื่นๆ (บาท)</label>
+                <div class="relative">
+                  <i data-lucide="coins" class="absolute left-3 top-2.5 w-5 h-5 text-gray-400 pointer-events-none"></i>
+                  <input type="number" id="exp-other" placeholder="0.00" class="w-full border border-gray-300 rounded-lg pl-10 p-2.5 text-sm bg-white">
+                </div>
+              </div>
+
+              <div>
+                <label class="text-sm font-bold text-gray-700 block mb-1">บันทึกช่วยจำ</label>
+                <textarea id="exp-note" rows="2" placeholder="เช่น ค่าที่จอดรถ, ปะยาง..." class="w-full border border-gray-300 rounded-lg p-2.5 text-sm bg-white"></textarea>
+              </div>
+
+              <button onclick="App.submitExpense()" class="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-bold shadow-md transition-colors flex justify-center items-center gap-2">
+                <i data-lucide="save" class="w-5 h-5"></i> บันทึกข้อมูล
+              </button>
             </div>
-            
-            <button onclick="App.submitCustomer()" class="w-full bg-primary text-white py-3 rounded-lg font-bold mt-2 shadow">บันทึกลูกค้า</button>
-          </div>
-          
-          <div class="mt-6 bg-white p-5 rounded-xl shadow-sm">
-            <h3 class="font-bold text-lg mb-3 text-gray-800 border-b pb-2">รายชื่อลูกค้าในระบบ</h3>
-            <div class="relative mb-3">
-              <i data-lucide="search" class="absolute left-3 top-2.5 w-4 h-4 text-gray-400"></i>
-              <input type="text" id="search-customer" placeholder="ค้นหาจากชื่อบริษัท หรือ ชื่อลูกค้า..." class="w-full border rounded-lg pl-9 p-2 text-sm bg-gray-50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" oninput="App.renderCustomers(this.value)">
-            </div>
-            <div id="customer-list" class="space-y-2 max-h-96 overflow-y-auto"></div>
           </div>
         </section>
 
-        <section id="view-vehicles" class="view-section hidden space-y-4">
-           <div class="bg-white p-5 rounded-xl shadow-sm space-y-3">
-             <h3 class="font-bold border-b pb-2 text-lg">จัดการรถยนต์</h3>
-             <input type="text" id="veh-plate" placeholder="ทะเบียนรถ" class="border rounded-lg p-2 text-sm w-full bg-gray-50">
-             <select id="veh-driver" class="w-full border rounded-lg p-2 text-sm bg-gray-50">
-               <option value="">-- เลือกพนักงานขับรถประจำ --</option>
-             </select>
-             <button onclick="App.submitVehicle()" class="w-full bg-primary text-white py-2 rounded-lg font-bold">บันทึกรถยนต์</button>
-           </div>
-           <div id="vehicle-list" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
-        </section>
-        
-        <section id="view-users" class="view-section hidden space-y-4">
-          <div class="bg-white p-5 rounded-xl shadow-sm space-y-3">
-            <h3 class="font-bold border-b pb-2 text-lg">เพิ่มผู้ใช้งานระบบ</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <input type="text" id="usr-username" placeholder="รหัสผู้ใช้งาน (Username)" class="border rounded-lg p-2 text-sm w-full bg-gray-50">
-              <input type="text" id="usr-password" placeholder="รหัสผ่าน (Password)" class="border rounded-lg p-2 text-sm w-full bg-gray-50">
-              <input type="text" id="usr-name" placeholder="ชื่อ-นามสกุล" class="border rounded-lg p-2 text-sm w-full bg-gray-50">
-              <select id="usr-role" class="border rounded-lg p-2 text-sm w-full bg-gray-50">
-                <option value="DRIVER">พนักงานขับรถ (DRIVER)</option>
-                <option value="DISPATCHER">พนักงานจัดส่ง (DISPATCHER)</option>
-                <option value="ADMIN">ผู้ดูแลระบบ (ADMIN)</option>
-              </select>
-            </div>
-            <button onclick="App.submitUser()" class="w-full bg-primary text-white py-2.5 rounded-lg font-bold mt-2 shadow">บันทึกผู้ใช้งาน</button>
-          </div>
-          <div id="user-list" class="space-y-2"></div>
-        </section>
-
+        <!-- Plan / Dispatch View (Admin/Dispatcher) -->
         <section id="view-plan" class="view-section hidden space-y-4">
-          <div class="bg-white p-5 rounded-xl shadow-sm space-y-3">
-            <h3 class="font-bold border-b pb-2 text-lg">สร้างแผนจัดส่ง</h3>
-            <input type="date" id="plan-date" class="w-full border rounded-lg p-2 text-sm bg-gray-50">
+          <div class="bg-white p-5 rounded-xl shadow-sm space-y-3 border-t-4 border-primary">
+            <h3 class="font-bold border-b pb-2 text-lg text-primary flex items-center gap-2"><i data-lucide="calendar-plus" class="w-5 h-5"></i> สร้างแผนจัดส่ง</h3>
+            <div class="relative">
+               <i data-lucide="calendar" class="absolute left-3 top-2.5 w-5 h-5 text-gray-400 pointer-events-none z-10"></i>
+               <input type="date" id="plan-date" class="w-full border border-gray-300 rounded-lg pl-10 p-2 text-sm bg-white focus:ring-2 focus:ring-primary focus:outline-none">
+            </div>
             
             <label class="text-xs font-bold text-gray-500">เลือกลูกค้า / สถานที่ส่ง</label>
             <div class="relative">
               <input type="text" id="plan-customer-search" placeholder="พิมพ์ค้นหาชื่อบริษัท หรือ ชื่อลูกค้า..." class="w-full border rounded-lg p-2 text-sm bg-gray-50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" autocomplete="off" oninput="document.getElementById('plan-customer').value = ''; App.filterPlanCustomers(this.value)" onclick="App.filterPlanCustomers(this.value)">
-              <input type="hidden" id="plan-customer"> <div id="plan-customer-dropdown" class="absolute z-20 w-full bg-white border border-gray-200 rounded-lg shadow-lg mt-1 hidden max-h-48 overflow-y-auto"></div>
+              <input type="hidden" id="plan-customer"> 
+              <div id="plan-customer-dropdown" class="absolute z-20 w-full bg-white border border-gray-200 rounded-lg shadow-xl mt-1 hidden max-h-48 overflow-y-auto"></div>
             </div>
             
             <label class="text-xs font-bold text-gray-500">มอบหมายพนักงาน / รถ</label>
@@ -289,13 +381,119 @@
             <label class="text-xs font-bold text-gray-500 mt-2">แนบไฟล์ Invoice (รูปภาพ)</label>
             <input type="file" id="plan-invoice" accept="image/*" class="w-full border rounded-lg p-2 text-sm bg-gray-50">
 
-            <button onclick="App.submitPlan()" class="w-full bg-primary text-white py-2.5 rounded-lg font-bold mt-2">บันทึกแผนงาน</button>
+            <button onclick="App.submitPlan()" class="w-full bg-primary text-white py-2.5 rounded-lg font-bold mt-2 shadow">บันทึกแผนงาน</button>
           </div>
           
           <div class="mt-6">
-            <h3 class="font-bold text-lg mb-3 text-gray-800 border-b pb-2">รายการแผนจัดส่ง (อัปเดต/ยกเลิก)</h3>
-            <div id="plan-list-admin" class="space-y-3"></div>
+            <div class="flex justify-between items-center mb-3">
+               <h3 class="font-bold text-lg text-gray-800 flex items-center"><i data-lucide="list-todo" class="w-5 h-5 mr-2 text-primary"></i>รายการแผนจัดส่ง</h3>
+               <button onclick="App.openRouteMap()" class="bg-green-100 hover:bg-green-200 text-green-700 text-xs font-bold py-1.5 px-3 rounded-full flex items-center gap-1 shadow-sm transition-colors border border-green-200">
+                 <i data-lucide="map" class="w-4 h-4"></i> ดูแผนที่เส้นทาง
+               </button>
+            </div>
+            
+            <!-- Plan Filters (Redesigned Buttons) -->
+            <div class="bg-white p-3 rounded-xl mb-4 space-y-2 border border-gray-200 shadow-sm">
+              <div class="flex gap-2">
+                <div class="relative w-1/2">
+                   <i data-lucide="calendar" class="absolute left-2.5 top-2.5 w-4 h-4 text-gray-400 pointer-events-none z-10"></i>
+                   <input type="date" id="filter-plan-date" class="w-full border rounded-lg pl-8 p-2 text-sm bg-gray-50 focus:ring-1 focus:ring-primary outline-none" onchange="App.renderPlans()">
+                </div>
+                <input type="text" id="filter-plan-search" placeholder="ค้นหาบริษัท/ลูกค้า..." class="w-1/2 border rounded-lg p-2 text-sm bg-gray-50 focus:ring-1 focus:ring-primary outline-none" oninput="App.renderPlans()">
+              </div>
+              <div class="flex gap-2 justify-end mt-2">
+                <button onclick="App.clearPlanFilter()" class="flex items-center gap-1 text-gray-500 hover:bg-gray-100 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors">
+                  <i data-lucide="filter-x" class="w-4 h-4"></i> ล้างตัวกรอง
+                </button>
+                <button onclick="App.showAllPlans()" class="flex items-center gap-1 text-primary hover:bg-blue-50 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors border border-blue-100">
+                  <i data-lucide="list" class="w-4 h-4"></i> แสดงทั้งหมด
+                </button>
+              </div>
+            </div>
+
+            <div id="plan-list-admin" class="space-y-3 relative"></div>
           </div>
+        </section>
+
+        <!-- Customers View -->
+        <section id="view-customers" class="view-section hidden space-y-4">
+          <div class="bg-white p-5 rounded-xl shadow-sm space-y-3">
+            <h3 class="font-bold border-b pb-2 text-lg">เพิ่มข้อมูลลูกค้า / หมุดแผนที่</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <input type="text" id="cust-company" placeholder="ชื่อบริษัท (ถ้ามี)" class="border rounded-lg p-2 text-sm w-full bg-gray-50">
+              <input type="text" id="cust-department" placeholder="หน่วยงาน (ถ้ามี)" class="border rounded-lg p-2 text-sm w-full bg-gray-50">
+              <input type="text" id="cust-name" placeholder="ชื่อลูกค้าผู้ติดต่อ" class="border rounded-lg p-2 text-sm w-full bg-gray-50">
+              <input type="text" id="cust-phone" placeholder="เบอร์โทรศัพท์" class="border rounded-lg p-2 text-sm w-full bg-gray-50">
+              <input type="email" id="cust-email" placeholder="อีเมล (Email)" class="border rounded-lg p-2 text-sm w-full bg-gray-50 md:col-span-2">
+            </div>
+            <textarea id="cust-address" placeholder="ที่อยู่ (สำหรับออกเอกสาร)" rows="2" class="w-full border rounded-lg p-2 text-sm bg-gray-50"></textarea>
+            
+            <div class="bg-blue-50 p-3 rounded-lg border border-blue-100 space-y-3">
+              <label class="text-sm font-bold text-blue-800 flex items-center gap-1"><i data-lucide="map-pin" class="w-4 h-4"></i> พิกัดแผนที่</label>
+              <input type="text" id="cust-latlng-input" placeholder="วางพิกัดที่นี่ เช่น 13.7563, 100.5018" class="border rounded-lg p-2 text-sm w-full bg-white shadow-sm border-blue-300" oninput="App.splitLatLng(this.value)">
+              <div class="flex gap-2 items-center">
+                <button onclick="App.getLocation()" class="text-sm bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-md flex items-center gap-2 whitespace-nowrap shadow transition-colors"><i data-lucide="crosshair" class="w-4 h-4"></i> ดึงพิกัด GPS</button>
+                <input type="text" id="cust-lat" placeholder="Latitude" class="border rounded-lg p-2 text-xs w-1/2 bg-gray-100" readonly>
+                <input type="text" id="cust-lng" placeholder="Longitude" class="border rounded-lg p-2 text-xs w-1/2 bg-gray-100" readonly>
+              </div>
+            </div>
+            <button onclick="App.submitCustomer()" class="w-full bg-primary text-white py-3 rounded-lg font-bold mt-2 shadow">บันทึกลูกค้า</button>
+          </div>
+          <div class="mt-6 bg-white p-5 rounded-xl shadow-sm">
+            <div class="relative mb-3">
+              <i data-lucide="search" class="absolute left-3 top-2.5 w-4 h-4 text-gray-400"></i>
+              <input type="text" id="search-customer" placeholder="ค้นหาจากชื่อบริษัท หรือ ชื่อลูกค้า..." class="w-full border rounded-lg pl-9 p-2 text-sm bg-gray-50" oninput="App.renderCustomers(this.value)">
+            </div>
+            <div id="customer-list" class="space-y-2 max-h-96 overflow-y-auto"></div>
+          </div>
+        </section>
+
+        <!-- Vehicles View -->
+        <section id="view-vehicles" class="view-section hidden space-y-4">
+           <div class="bg-white p-5 rounded-xl shadow-sm space-y-4">
+             <h3 class="font-bold border-b pb-2 text-lg text-primary"><i data-lucide="car" class="inline w-5 h-5 mr-1"></i> จัดการรถยนต์ & คนขับ</h3>
+             
+             <div>
+               <label class="text-xs font-bold text-gray-500 mb-1 block">เลือกทะเบียนรถ เพื่ออัปเดตคนขับ หรือ เพิ่มใหม่</label>
+               <select id="veh-select" class="w-full border rounded-lg p-2.5 text-sm bg-gray-50 focus:ring-1 focus:ring-primary outline-none" onchange="App.onVehicleSelectChange(this.value)">
+                 <option value="">-- เลือกทะเบียนรถ --</option>
+                 <!-- Options Injected -->
+               </select>
+             </div>
+             
+             <div id="veh-new-container" class="hidden">
+                <input type="text" id="veh-plate-new" placeholder="ระบุทะเบียนรถใหม่" class="border border-green-300 rounded-lg p-2.5 text-sm w-full bg-green-50 focus:ring-1 focus:ring-green-500 outline-none">
+             </div>
+             
+             <div>
+               <label class="text-xs font-bold text-gray-500 mb-1 block">มอบหมายพนักงานขับรถประจำ</label>
+               <select id="veh-driver" class="w-full border rounded-lg p-2.5 text-sm bg-gray-50 focus:ring-1 focus:ring-primary outline-none"><option value="">-- เลือกพนักงานขับรถประจำ --</option></select>
+             </div>
+             
+             <button onclick="App.submitVehicle()" class="w-full bg-primary text-white py-3 rounded-lg font-bold shadow-md transition-all hover:bg-opacity-90">บันทึกข้อมูลรถยนต์</button>
+           </div>
+           
+           <h3 class="font-bold text-gray-800 mt-6 border-b pb-2">รายชื่อรถยนต์ในระบบ</h3>
+           <div id="vehicle-list" class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4"></div>
+        </section>
+        
+        <!-- Users View -->
+        <section id="view-users" class="view-section hidden space-y-4">
+          <div class="bg-white p-5 rounded-xl shadow-sm space-y-3">
+            <h3 class="font-bold border-b pb-2 text-lg">เพิ่มผู้ใช้งานระบบ</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <input type="text" id="usr-username" placeholder="รหัสผู้ใช้งาน" class="border rounded-lg p-2 text-sm w-full bg-gray-50">
+              <input type="text" id="usr-password" placeholder="รหัสผ่าน" class="border rounded-lg p-2 text-sm w-full bg-gray-50">
+              <input type="text" id="usr-name" placeholder="ชื่อ-นามสกุล" class="border rounded-lg p-2 text-sm w-full bg-gray-50">
+              <select id="usr-role" class="border rounded-lg p-2 text-sm w-full bg-gray-50">
+                <option value="DRIVER">พนักงานขับรถ (DRIVER)</option>
+                <option value="DISPATCHER">พนักงานจัดส่ง (DISPATCHER)</option>
+                <option value="ADMIN">ผู้ดูแลระบบ (ADMIN)</option>
+              </select>
+            </div>
+            <button onclick="App.submitUser()" class="w-full bg-primary text-white py-2.5 rounded-lg font-bold mt-2 shadow">บันทึกผู้ใช้งาน</button>
+          </div>
+          <div id="user-list" class="space-y-2"></div>
         </section>
 
       </main>
@@ -337,6 +535,8 @@
       state: { users: [], customers: [], vehicles: [], deliveries: [], logs: [], expenses: [] },
       currentTask: null,
       sigPad: null,
+      dashFilter: 'day',
+      expFilter: 'all',
 
       init() {
         lucide.createIcons();
@@ -346,6 +546,10 @@
         const today = new Date().toISOString().split('T')[0];
         if(document.getElementById('mile-date')) document.getElementById('mile-date').value = today;
         if(document.getElementById('plan-date')) document.getElementById('plan-date').value = today;
+        if(document.getElementById('filter-plan-date')) document.getElementById('filter-plan-date').value = today; 
+        if(document.getElementById('dash-date')) document.getElementById('dash-date').value = today;
+        if(document.getElementById('exp-date')) document.getElementById('exp-date').value = today;
+        if(document.getElementById('exp-date-filter')) document.getElementById('exp-date-filter').value = today;
 
         const storedUser = localStorage.getItem('hl_user');
         if (storedUser) {
@@ -362,27 +566,16 @@
           const toastContent = document.getElementById('toast-content');
           const toastText = document.getElementById('toast-text');
           
-          const colors = {
-              info: 'bg-blue-600',
-              success: 'bg-green-600',
-              error: 'bg-red-600',
-              warning: 'bg-amber-500'
-          };
-
+          const colors = { info: 'bg-blue-600', success: 'bg-green-600', error: 'bg-red-600', warning: 'bg-amber-500' };
           toastContent.className = `px-4 py-3 rounded-lg shadow-xl text-white font-medium flex items-center gap-2 ${colors[type]}`;
           toastText.textContent = message;
           toastBox.classList.remove('hidden');
 
-          if (type !== 'error') {
-              setTimeout(() => toastBox.classList.add('hidden'), 3000);
-          }
+          if (type !== 'error') setTimeout(() => toastBox.classList.add('hidden'), 3500);
       },
 
       initNetworkListener() {
-          window.addEventListener('offline', () => {
-              console.warn("เข้าสู่โหมดออฟไลน์แล้ว (ซ่อนการแจ้งเตือน)");
-          });
-          
+          window.addEventListener('offline', () => console.warn("เข้าสู่โหมดออฟไลน์แล้ว (ซ่อนการแจ้งเตือน)"));
           window.addEventListener('online', () => {
               if (this.currentUser) {
                   this.showToast("กลับมาออนไลน์แล้ว กำลังอัปเดตข้อมูล", "success");
@@ -453,27 +646,28 @@
           sidebar.classList.add('hidden');
           bottomNav.classList.remove('hidden');
           menuBtn.classList.add('hidden');
-          mobileLogoutBtn.classList.remove('hidden'); // แสดงปุ่มออกระบบบนหัวจอเฉพาะคนขับ
+          mobileLogoutBtn.classList.remove('hidden'); 
           this.navigate('view-route');
         } else {
-          // ADMIN or DISPATCHER
           sidebar.classList.remove('hidden');
           bottomNav.classList.add('hidden');
           menuBtn.classList.remove('hidden');
-          mobileLogoutBtn.classList.add('hidden'); // ซ่อน เพราะ Admin ออกระบบผ่าน Sidebar ได้
+          mobileLogoutBtn.classList.add('hidden');
           
           let navHTML = '';
+          navHTML += this.createSideLink('view-dashboard', 'layout-dashboard', 'แดชบอร์ด');
           navHTML += this.createSideLink('view-plan', 'calendar-plus', 'วางแผนจัดส่ง');
           navHTML += this.createSideLink('view-vehicles', 'car', 'จัดการรถยนต์');
           navHTML += this.createSideLink('view-customers', 'users', 'ฐานข้อมูลลูกค้า');
           
           if(u.Role === 'ADMIN') {
+            navHTML += this.createSideLink('view-expenses', 'wallet', 'ค่าใช้จ่าย');
             navHTML += this.createSideLink('view-users', 'user-cog', 'จัดการผู้ใช้งาน');
           }
           
           sidebarNav.innerHTML = navHTML;
           lucide.createIcons();
-          this.navigate('view-plan');
+          this.navigate('view-dashboard');
         }
       },
 
@@ -495,37 +689,47 @@
       },
 
       navigate(viewId) {
+        if (viewId === 'view-route' && this.currentUser && this.currentUser.Role === 'DRIVER') {
+            const today = new Date().toISOString().split('T')[0];
+            const localStarted = localStorage.getItem(`hl_mile_started_${this.currentUser.UserID}_${today}`);
+            const hasStarted = (this.state.logs || []).find(l => String(l.DriverID) === String(this.currentUser.UserID) && l.Date && l.Date.startsWith(today) && l.StartMileage);
+            
+            if (!hasStarted && !localStarted) {
+                document.getElementById('mileage-warning').classList.remove('hidden');
+                this.showToast('⚠️ ระบบบังคับให้กรอกเลขไมล์เริ่มต้นก่อนเริ่มงาน', 'warning');
+                viewId = 'view-mileage';
+            } else {
+                document.getElementById('mileage-warning').classList.add('hidden');
+            }
+        }
+
         document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
-        document.getElementById(viewId).classList.remove('hidden');
+        const targetView = document.getElementById(viewId);
+        if(targetView) targetView.classList.remove('hidden');
         
-        // Update Bottom Nav styles
         document.querySelectorAll('#bottom-nav .nav-btn').forEach(btn => {
           if (btn.dataset && btn.dataset.target === viewId) { btn.classList.add('text-primary'); btn.classList.remove('text-gray-500'); } 
           else if(btn.dataset && btn.dataset.target) { btn.classList.remove('text-primary'); btn.classList.add('text-gray-500'); }
         });
-        
-        // Update Sidebar Nav styles
         document.querySelectorAll('#sidebar-nav button').forEach(btn => {
-          if (btn.dataset.target === viewId) { btn.classList.add('bg-white/20'); } 
-          else { btn.classList.remove('bg-white/20'); }
+          if (btn.dataset.target === viewId) btn.classList.add('bg-white/20'); else btn.classList.remove('bg-white/20');
         });
 
-        // Set Header Title
         const titles = {
-          'view-route': 'งานวันนี้', 'view-mileage': 'บันทึกเลขไมล์',
-          'view-plan': 'แผนจัดส่ง', 'view-vehicles': 'จัดการรถยนต์', 'view-customers': 'ลูกค้า', 'view-users': 'จัดการผู้ใช้งาน'
+          'view-route': 'งานวันนี้', 'view-mileage': 'บันทึกเลขไมล์', 'view-dashboard': 'แดชบอร์ด',
+          'view-plan': 'แผนจัดส่ง', 'view-vehicles': 'จัดการรถยนต์', 'view-customers': 'ลูกค้า', 
+          'view-users': 'จัดการผู้ใช้งาน', 'view-expenses': 'สรุปค่าใช้จ่าย'
         };
         document.getElementById('header-title').innerText = titles[viewId] || 'Hybrid Logistic';
 
         if (viewId === 'view-route') this.renderRouteList();
         if (viewId === 'view-customers') this.renderCustomers();
-        if (viewId === 'view-vehicles') this.renderVehicles();
+        if (viewId === 'view-vehicles') { this.populateDropdowns(); this.renderVehicles(); }
         if (viewId === 'view-users') this.renderUsers();
-        if (viewId === 'view-plan') {
-           this.populateDropdowns();
-           this.renderPlans();
-        }
-        if (viewId === 'view-mileage') this.populateDropdowns();
+        if (viewId === 'view-dashboard') this.renderDashboard();
+        if (viewId === 'view-expenses') { this.populateDropdowns(); this.renderExpenses(); this.calcAutoDistance(); }
+        if (viewId === 'view-plan') { this.populateDropdowns(); this.renderPlans(); }
+        if (viewId === 'view-mileage') { this.populateDropdowns(); this.autoSelectVehicleAndMileage(); }
       },
 
       async fetchData(showLoader = false) {
@@ -537,20 +741,25 @@
             this.state = result.data;
             localStorage.setItem('hl_data', JSON.stringify(this.state));
             
-            // Refresh visible views
-            if (!document.getElementById('view-route').classList.contains('hidden')) this.renderRouteList();
-            if (!document.getElementById('view-customers').classList.contains('hidden')) this.renderCustomers();
-            if (!document.getElementById('view-vehicles').classList.contains('hidden')) this.renderVehicles();
-            if (!document.getElementById('view-users').classList.contains('hidden')) this.renderUsers();
-            if (!document.getElementById('view-plan').classList.contains('hidden')) {
-               this.populateDropdowns();
-               this.renderPlans();
-            }
+            const activeViews = ['view-route', 'view-mileage', 'view-customers', 'view-vehicles', 'view-users', 'view-plan', 'view-dashboard', 'view-expenses'];
+            activeViews.forEach(v => {
+                if (!document.getElementById(v).classList.contains('hidden')) {
+                    if(v === 'view-plan' || v === 'view-expenses' || v === 'view-mileage' || v === 'view-vehicles') this.populateDropdowns();
+                    if(v === 'view-route') this.renderRouteList();
+                    if(v === 'view-mileage') this.autoSelectVehicleAndMileage();
+                    if(v === 'view-customers') this.renderCustomers();
+                    if(v === 'view-vehicles') this.renderVehicles();
+                    if(v === 'view-users') this.renderUsers();
+                    if(v === 'view-plan') this.renderPlans();
+                    if(v === 'view-dashboard') this.renderDashboard();
+                    if(v === 'view-expenses') { this.renderExpenses(); this.calcAutoDistance(); }
+                }
+            });
           }
         } catch (error) {
           const cached = localStorage.getItem('hl_data');
           if(cached) this.state = JSON.parse(cached);
-          console.warn('ดึงข้อมูลไม่ได้ ใช้งานผ่านแคช (Silent Error)');
+          console.warn('ดึงข้อมูลไม่ได้ ใช้งานผ่านแคช');
         } finally {
           if (showLoader) this.hideLoader();
         }
@@ -583,7 +792,6 @@
         }
       },
 
-      // --- Views Render & Logic ---
       populateDropdowns() {
         const drivers = (this.state.users || []).filter(u => u.Role === 'DRIVER');
         let dOptions = '<option value="">-- เลือกพนักงาน --</option>' + drivers.map(d => `<option value="${d.UserID}">${d.Name}</option>`).join('');
@@ -591,19 +799,546 @@
         dEls.forEach(id => { if(document.getElementById(id)) document.getElementById(id).innerHTML = dOptions; });
 
         let vOptions = '<option value="">-- เลือกรถยนต์ --</option>' + (this.state.vehicles || []).map(v => `<option value="${v.VehicleID}">${v.LicensePlate}</option>`).join('');
-        const vEls = ['plan-vehicle', 'mile-vehicle'];
+        const vEls = ['plan-vehicle', 'mile-vehicle', 'exp-vehicle'];
         vEls.forEach(id => { if(document.getElementById(id)) document.getElementById(id).innerHTML = vOptions; });
+
+        const vSelectElem = document.getElementById('veh-select');
+        if (vSelectElem) {
+           let vSelectHTML = '<option value="">-- เลือกทะเบียนรถ --</option>';
+           vSelectHTML += (this.state.vehicles || []).map(v => `<option value="${v.VehicleID}">${v.LicensePlate}</option>`).join('');
+           vSelectHTML += '<option value="NEW" class="text-green-600 font-bold">+ เพิ่มรถใหม่</option>';
+           vSelectElem.innerHTML = vSelectHTML;
+        }
       },
 
-      // --- ฟังก์ชันค้นหาลูกค้าในหน้าจัดส่ง ---
+      onVehicleSelectChange(val) {
+         const newContainer = document.getElementById('veh-new-container');
+         const plateInput = document.getElementById('veh-plate-new');
+         const driverSelect = document.getElementById('veh-driver');
+         
+         if (val === 'NEW') {
+             newContainer.classList.remove('hidden');
+             plateInput.value = '';
+             driverSelect.value = '';
+         } else if (val) {
+             newContainer.classList.add('hidden');
+             const existingV = (this.state.vehicles || []).find(v => v.VehicleID === val);
+             if(existingV) driverSelect.value = existingV.CurrentDriverID || '';
+         } else {
+             newContainer.classList.add('hidden');
+             driverSelect.value = '';
+         }
+      },
+
+      async submitVehicle() {
+        const selectVal = document.getElementById('veh-select').value;
+        const driver = document.getElementById('veh-driver').value;
+        
+        if (!selectVal) return this.showToast('กรุณาเลือกรถที่ต้องการจัดการ', 'warning');
+
+        if (selectVal === 'NEW') {
+            const plate = document.getElementById('veh-plate-new').value;
+            if(!plate) return this.showToast('กรุณาระบุทะเบียนรถใหม่', 'warning');
+            
+            const payload = { action: 'insert', sheet: 'Vehicles', data: { VehicleID: 'VEH-' + new Date().getTime(), LicensePlate: plate, CurrentDriverID: driver, Status: 'Active' }};
+            if (await this.postData(payload, 'บันทึกรถคันใหม่...')) {
+               document.getElementById('veh-plate-new').value = '';
+               document.getElementById('veh-select').value = '';
+               this.renderVehicles();
+            }
+        } else {
+            const payload = { action: 'update', sheet: 'Vehicles', idField: 'VehicleID', idValue: selectVal, data: { CurrentDriverID: driver }};
+            if (await this.postData(payload, 'อัปเดตคนขับรถ...')) {
+               document.getElementById('veh-select').value = '';
+               document.getElementById('veh-driver').value = '';
+               this.renderVehicles();
+            }
+        }
+      },
+      
+      renderVehicles() {
+        document.getElementById('vehicle-list').innerHTML = (this.state.vehicles || []).map(v => {
+          const d = (this.state.users || []).find(u => u.UserID == v.CurrentDriverID);
+          return `<div class="bg-white p-3 rounded-lg shadow-sm border border-gray-200 flex items-center justify-between"><div class="flex items-center gap-3"><div class="bg-gray-100 p-2 rounded"><i data-lucide="car" class="w-5 h-5 text-gray-700"></i></div><div><p class="font-bold text-sm">${v.LicensePlate}</p><p class="text-xs text-gray-500">${d ? d.Name : 'ยังไม่ระบุคนขับ'}</p></div></div></div>`;
+        }).join('');
+        lucide.createIcons();
+      },
+
+      autoSelectVehicleAndMileage() {
+        if(!this.currentUser) return;
+        const myVehicle = (this.state.vehicles || []).find(v => String(v.CurrentDriverID) === String(this.currentUser.UserID));
+        const mileVehicleSelect = document.getElementById('mile-vehicle');
+        if (myVehicle && mileVehicleSelect && !mileVehicleSelect.value) {
+            mileVehicleSelect.value = myVehicle.VehicleID;
+        }
+        if(mileVehicleSelect && mileVehicleSelect.value) {
+            this.fetchLastMileage(mileVehicleSelect.value);
+        }
+      },
+
+      fetchLastMileage(vehicleId) {
+        if (!vehicleId) {
+            document.getElementById('mile-start').value = '';
+            document.getElementById('mile-log-id').value = '';
+            return;
+        }
+        
+        const today = new Date().toISOString().split('T')[0];
+        const vLogs = (this.state.logs || []).filter(l => String(l.VehicleID) === String(vehicleId));
+        vLogs.sort((a, b) => new Date(b.Date) - new Date(a.Date)); 
+        
+        const todayLog = vLogs.find(l => l.Date && l.Date.startsWith(today) && String(l.DriverID) === String(this.currentUser.UserID));
+        
+        if (todayLog && todayLog.StartMileage) {
+           document.getElementById('mile-start').value = todayLog.StartMileage;
+           document.getElementById('mile-end').value = todayLog.EndMileage || '';
+           document.getElementById('mile-log-id').value = todayLog.LogID || '';
+        } else {
+           const pastLogs = vLogs.filter(l => !l.Date.startsWith(today));
+           if (pastLogs.length > 0) {
+               document.getElementById('mile-start').value = pastLogs[0].EndMileage || pastLogs[0].StartMileage || '';
+           } else {
+               document.getElementById('mile-start').value = '';
+           }
+           document.getElementById('mile-end').value = ''; 
+           document.getElementById('mile-log-id').value = '';
+        }
+      },
+
+      async submitMileage() {
+        const start = document.getElementById('mile-start').value;
+        const end = document.getElementById('mile-end').value;
+        const veh = document.getElementById('mile-vehicle').value;
+        const dateVal = document.getElementById('mile-date').value;
+        const logId = document.getElementById('mile-log-id').value;
+        
+        if(!start || !veh) return this.showToast('กรอกรถยนต์และเลขไมล์เริ่มให้ครบ', 'warning');
+        
+        let payload;
+        if (logId) {
+            payload = { 
+                action: 'update', sheet: 'DailyLogs', idField: 'LogID', idValue: logId, 
+                data: { StartMileage: start, EndMileage: end }
+            };
+        } else {
+            const newLogId = 'LOG-' + new Date().getTime();
+            payload = { 
+                action: 'insert', sheet: 'DailyLogs', 
+                data: { LogID: newLogId, Date: dateVal, DriverID: this.currentUser.UserID, VehicleID: veh, StartMileage: start, EndMileage: end }
+            };
+        }
+        
+        if (await this.postData(payload, 'บันทึกเลขไมล์...')) {
+          localStorage.setItem(`hl_mile_started_${this.currentUser.UserID}_${dateVal}`, 'true');
+          
+          if(!logId) this.state.logs.push(payload.data); 
+          else {
+              const idx = this.state.logs.findIndex(l => l.LogID === logId);
+              if(idx > -1) { this.state.logs[idx].StartMileage = start; this.state.logs[idx].EndMileage = end; }
+          }
+          
+          if(end) { 
+            document.getElementById('mile-start').value = ''; 
+            document.getElementById('mile-end').value = ''; 
+            document.getElementById('mile-log-id').value = '';
+          }
+          
+          this.navigate('view-route');
+        }
+      },
+
+      setDashFilter(type) {
+         this.dashFilter = type;
+         const dateInput = document.getElementById('dash-date');
+         dateInput.classList.toggle('hidden', type === 'all'); 
+         
+         const today = new Date();
+         if(type === 'day') { 
+            dateInput.type = 'date'; 
+            dateInput.value = today.toISOString().split('T')[0]; 
+         } else if(type === 'month') { 
+            dateInput.type = 'month'; 
+            dateInput.value = today.toISOString().substring(0,7); 
+         } else if(type === 'year') { 
+            dateInput.type = 'number'; 
+            dateInput.placeholder = 'ระบุปี ค.ศ. เช่น 2024'; 
+            dateInput.value = today.getFullYear(); 
+         }
+
+         ['day','month','year'].forEach(t => {
+            const btn = document.getElementById(`btn-dash-${t}`);
+            if(btn) {
+               if(t===type){ btn.classList.add('bg-white','shadow','text-primary'); btn.classList.remove('text-gray-500','hover:bg-gray-200'); }
+               else{ btn.classList.remove('bg-white','shadow','text-primary'); btn.classList.add('text-gray-500','hover:bg-gray-200'); }
+            }
+         });
+         this.renderDashboard();
+      },
+
+      renderDashboard() {
+         const dateVal = document.getElementById('dash-date').value;
+         const deliveries = this.state.deliveries || [];
+         
+         let filtered = deliveries;
+         if (dateVal) filtered = deliveries.filter(d => d.Date && d.Date.startsWith(dateVal));
+
+         const totalTasks = filtered.length;
+         const successTasks = filtered.filter(d => d.Status === 'สำเร็จ').length;
+         const failedTasks = filtered.filter(d => d.Status === 'ไม่สำเร็จ');
+         const pct = totalTasks > 0 ? Math.round((successTasks/totalTasks)*100) : 0;
+
+         document.getElementById('dashboard-stats').innerHTML = `
+            <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 text-center">
+              <p class="text-xs text-blue-600 font-bold mb-1">งานทั้งหมด (จุด)</p>
+              <p class="text-3xl font-black text-blue-800">${totalTasks}</p>
+            </div>
+            <div class="bg-green-50 p-4 rounded-xl border border-green-100 text-center">
+              <p class="text-xs text-green-600 font-bold mb-1">สำเร็จ (%)</p>
+              <p class="text-3xl font-black text-green-800">${pct}%</p>
+            </div>
+         `;
+
+         const byVehicle = {};
+         filtered.forEach(task => {
+            const vid = task.VehicleID || 'ไม่ระบุ';
+            if(!byVehicle[vid]) byVehicle[vid] = { total: 0, success: 0, failed: 0, pending: 0 };
+            byVehicle[vid].total++;
+            if(task.Status === 'สำเร็จ') byVehicle[vid].success++;
+            else if(task.Status === 'ไม่สำเร็จ') byVehicle[vid].failed++;
+            else byVehicle[vid].pending++;
+         });
+
+         const vContainer = document.getElementById('dashboard-vehicles');
+         if(Object.keys(byVehicle).length === 0) {
+            vContainer.innerHTML = '<div class="text-center text-sm text-gray-500 py-4 bg-gray-50 rounded-xl border border-dashed">ไม่มีข้อมูลงานจัดส่ง</div>';
+         } else {
+            vContainer.innerHTML = Object.keys(byVehicle).map(vid => {
+               const vName = (this.state.vehicles||[]).find(v => v.VehicleID == vid)?.LicensePlate || 'ไม่ระบุรถ';
+               const vData = byVehicle[vid];
+               
+               const sPct = (vData.success / vData.total) * 100;
+               const fPct = (vData.failed / vData.total) * 100;
+               const pPct = (vData.pending / vData.total) * 100;
+               
+               return `
+                 <div class="bg-white border rounded-xl p-4 shadow-sm">
+                   <div class="flex justify-between items-center mb-2">
+                     <p class="font-bold text-sm text-gray-800 flex items-center gap-1"><i data-lucide="car" class="w-4 h-4 text-gray-500"></i>${vName}</p>
+                     <p class="text-[10px] font-bold text-gray-500 bg-gray-100 px-2 py-1 rounded">รวม ${vData.total} งาน</p>
+                   </div>
+                   <!-- 100% Stacked Bar Chart -->
+                   <div class="w-full bg-gray-100 rounded-full h-4 flex overflow-hidden shadow-inner mb-3">
+                     ${sPct > 0 ? `<div class="bg-green-500 h-4 transition-all duration-500 flex items-center justify-center text-[9px] text-white font-bold" style="width: ${sPct}%">${sPct >= 10 ? Math.round(sPct)+'%' : ''}</div>` : ''}
+                     ${fPct > 0 ? `<div class="bg-red-500 h-4 transition-all duration-500 flex items-center justify-center text-[9px] text-white font-bold" style="width: ${fPct}%">${fPct >= 10 ? Math.round(fPct)+'%' : ''}</div>` : ''}
+                     ${pPct > 0 ? `<div class="bg-blue-400 h-4 transition-all duration-500 flex items-center justify-center text-[9px] text-white font-bold" style="width: ${pPct}%">${pPct >= 10 ? Math.round(pPct)+'%' : ''}</div>` : ''}
+                   </div>
+                   <!-- Legend -->
+                   <div class="flex gap-3 text-[10px] font-bold">
+                     ${vData.success > 0 ? `<span class="text-green-700 flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-500"></span>สำเร็จ ${vData.success}</span>` : ''}
+                     ${vData.failed > 0 ? `<span class="text-red-700 flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-red-500"></span>พลาด ${vData.failed}</span>` : ''}
+                     ${vData.pending > 0 ? `<span class="text-blue-700 flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-blue-400"></span>รอดำเนินการ ${vData.pending}</span>` : ''}
+                   </div>
+                 </div>
+               `;
+            }).join('');
+         }
+
+         const fContainer = document.getElementById('dashboard-failed');
+         if(failedTasks.length === 0) {
+             fContainer.innerHTML = '<div class="text-center text-sm text-gray-500 py-4 bg-gray-50 rounded-xl border border-dashed">ไม่มีรายการจัดส่งล้มเหลว</div>';
+         } else {
+             fContainer.innerHTML = failedTasks.map(task => {
+                 const cust = (this.state.customers||[]).find(c => c.CustomerID == task.CustomerID)?.CustomerName || 'ไม่ทราบลูกค้า';
+                 return `
+                 <div class="bg-red-50 border border-red-100 rounded-lg p-3 shadow-sm">
+                    <div class="flex justify-between items-start">
+                      <p class="font-bold text-sm text-red-800">${cust}</p>
+                      <span class="text-[10px] bg-red-600 text-white px-2 py-0.5 rounded">ส่งไม่สำเร็จ</span>
+                    </div>
+                    <p class="text-xs text-red-600 mt-1"><i data-lucide="message-square" class="inline w-3 h-3 mr-1"></i>สาเหตุ: ${task.ProblemNote || 'ไม่ระบุสาเหตุ'}</p>
+                    <p class="text-[10px] text-gray-500 mt-1">วันที่: ${task.Date?task.Date.split('T')[0]:'-'}</p>
+                 </div>
+                 `;
+             }).join('');
+         }
+         lucide.createIcons();
+      },
+
+      setExpFilter(type) {
+         this.expFilter = type;
+         const dateInputContainer = document.getElementById('exp-date-filter-container');
+         const dateInput = document.getElementById('exp-date-filter');
+         
+         if(type === 'all') {
+             dateInputContainer.style.display = 'none';
+         } else {
+             dateInputContainer.style.display = 'block';
+         }
+         
+         const today = new Date();
+         if(type === 'day') { 
+            dateInput.type = 'date'; 
+            dateInput.value = today.toISOString().split('T')[0]; 
+         } else if(type === 'month') { 
+            dateInput.type = 'month'; 
+            dateInput.value = today.toISOString().substring(0,7); 
+         } else if(type === 'year') { 
+            dateInput.type = 'number'; 
+            dateInput.placeholder = 'ระบุปี ค.ศ. เช่น 2024'; 
+            dateInput.value = today.getFullYear(); 
+         }
+         
+         ['all','day','month','year'].forEach(t => {
+            const btn = document.getElementById(`btn-exp-${t}`);
+            if(btn) {
+               if(t===type){ btn.classList.add('bg-white','shadow','text-primary'); btn.classList.remove('text-gray-500','hover:bg-gray-200'); }
+               else{ btn.classList.remove('bg-white','shadow','text-primary'); btn.classList.add('text-gray-500','hover:bg-gray-200'); }
+            }
+         });
+         this.renderExpenses();
+      },
+
+      calcAutoDistance() {
+         const d = document.getElementById('exp-date').value;
+         const v = document.getElementById('exp-vehicle').value;
+         const distInput = document.getElementById('exp-distance');
+         if(d && v) {
+             const log = (this.state.logs || []).find(l => l.Date && l.Date.startsWith(d) && String(l.VehicleID) === String(v));
+             if (log && log.StartMileage && log.EndMileage) {
+                 const diff = parseFloat(log.EndMileage) - parseFloat(log.StartMileage);
+                 if (diff > 0) {
+                     distInput.value = diff;
+                     return;
+                 }
+             }
+         }
+         distInput.value = '';
+      },
+
+      renderExpenses() {
+         const filterType = this.expFilter;
+         const dateVal = document.getElementById('exp-date-filter').value;
+         
+         const exps = this.state.expenses || [];
+         const logs = this.state.logs || [];
+
+         let fExps = exps;
+         let fLogs = logs;
+
+         if(filterType !== 'all' && dateVal) {
+             fExps = exps.filter(e => e.Date && e.Date.startsWith(dateVal));
+             fLogs = logs.filter(l => l.Date && l.Date.startsWith(dateVal));
+         }
+
+         let totalFuel = 0; let totalToll = 0; let totalOther = 0;
+         fExps.forEach(e => { 
+            totalFuel += parseFloat(e.FuelCost||0); 
+            totalToll += parseFloat(e.TollCost||0); 
+            totalOther += parseFloat(e.OtherCost||0); 
+         });
+         const totalCost = totalFuel + totalToll + totalOther;
+
+         let totalDistance = 0;
+         fExps.forEach(e => {
+             if (e.Distance && parseFloat(e.Distance) > 0) {
+                 totalDistance += parseFloat(e.Distance);
+             }
+         });
+
+         if (totalDistance === 0) {
+             fLogs.forEach(l => {
+                 const s = parseFloat(l.StartMileage); const e = parseFloat(l.EndMileage);
+                 if(!isNaN(s) && !isNaN(e) && e > s) totalDistance += (e - s);
+             });
+         }
+
+         const avgCost = totalDistance > 0 ? (totalCost / totalDistance).toFixed(2) : '0.00';
+
+         document.getElementById('expense-cards').innerHTML = `
+            <div class="bg-primary text-white p-4 rounded-xl shadow col-span-2 relative overflow-hidden">
+              <i data-lucide="wallet" class="absolute -right-4 -bottom-4 w-24 h-24 text-white opacity-10"></i>
+              <p class="text-xs font-bold opacity-80 mb-1">ยอดค่าใช้จ่ายรวมทั้งหมด (บาท)</p>
+              <p class="text-3xl font-black">${totalCost.toLocaleString('en-US', {minimumFractionDigits:2})}</p>
+            </div>
+            <div class="bg-white p-3 rounded-xl border border-gray-200 shadow-sm">
+              <p class="text-[10px] font-bold text-gray-500"><i data-lucide="fuel" class="inline w-3 h-3 text-orange-500"></i> ค่าน้ำมัน</p>
+              <p class="text-lg font-bold text-orange-600">${totalFuel.toLocaleString('en-US', {minimumFractionDigits:2})}</p>
+            </div>
+            <div class="bg-white p-3 rounded-xl border border-gray-200 shadow-sm">
+              <p class="text-[10px] font-bold text-gray-500"><i data-lucide="ticket" class="inline w-3 h-3 text-purple-500"></i> ค่าทางด่วน+อื่นๆ</p>
+              <p class="text-lg font-bold text-purple-600">${(totalToll + totalOther).toLocaleString('en-US', {minimumFractionDigits:2})}</p>
+            </div>
+            <div class="bg-green-50 p-4 rounded-xl border border-green-200 shadow-sm col-span-2 flex justify-between items-center">
+              <div>
+                <p class="text-xs font-bold text-green-800">ค่าเฉลี่ยต้นทุน / ระยะทาง</p>
+                <p class="text-[10px] text-green-600 mt-1">อ้างอิงระยะทางรวม ${totalDistance} กม.</p>
+              </div>
+              <div class="text-right">
+                <p class="text-2xl font-black text-green-700">${avgCost} <span class="text-sm font-bold">฿/กม.</span></p>
+              </div>
+            </div>
+         `;
+         lucide.createIcons();
+      },
+
+      async submitExpense() {
+         const date = document.getElementById('exp-date').value;
+         const veh = document.getElementById('exp-vehicle').value;
+         const dist = document.getElementById('exp-distance').value || 0;
+         const fuel = document.getElementById('exp-fuel').value || 0;
+         const toll = document.getElementById('exp-toll').value || 0;
+         const other = document.getElementById('exp-other').value || 0;
+         const note = document.getElementById('exp-note').value || '';
+         
+         if(!veh || !date) return this.showToast('กรุณาเลือกวันที่และรถยนต์', 'warning');
+         if(fuel==0 && toll==0 && other==0) return this.showToast('กรุณากรอกยอดเงินอย่างน้อย 1 ช่อง', 'warning');
+
+         const payload = { action: 'insert', sheet: 'Expenses', data: {
+             ExpenseID: 'EXP-' + new Date().getTime(),
+             Date: date, VehicleID: veh, Distance: dist, FuelCost: fuel, TollCost: toll, OtherCost: other, Note: note
+         }};
+
+         if (await this.postData(payload, 'บันทึกค่าใช้จ่าย...')) {
+             document.getElementById('exp-fuel').value = '';
+             document.getElementById('exp-toll').value = '';
+             document.getElementById('exp-other').value = '';
+             document.getElementById('exp-note').value = '';
+             this.renderExpenses();
+         }
+      },
+
+      clearPlanFilter() {
+        document.getElementById('filter-plan-date').value = '';
+        document.getElementById('filter-plan-search').value = '';
+        this.renderPlans();
+      },
+      showAllPlans() {
+        document.getElementById('filter-plan-date').value = '';
+        this.renderPlans();
+      },
+
+      openRouteMap() {
+        const container = document.getElementById('plan-list-admin');
+        const renderedIds = Array.from(container.querySelectorAll('.plan-item')).map(el => el.dataset.id);
+        
+        const plansWithLocations = [];
+        renderedIds.forEach(pid => {
+            const plan = (this.state.deliveries || []).find(d => d.DeliveryID === pid);
+            if (plan) {
+                const cust = (this.state.customers || []).find(c => c.CustomerID == plan.CustomerID);
+                if (cust && cust.Latitude && cust.Longitude) {
+                    plansWithLocations.push(`${cust.Latitude},${cust.Longitude}`);
+                }
+            }
+        });
+
+        if (plansWithLocations.length === 0) {
+            return this.showToast('ไม่พบข้อมูลพิกัด (GPS) ในรายการลูกค้าของแผนงานเหล่านี้', 'warning');
+        }
+
+        const origin = plansWithLocations[plansWithLocations.length - 1]; 
+        const destination = plansWithLocations[0];
+        
+        let waypoints = '';
+        if (plansWithLocations.length > 2) {
+            const waypointsArr = [...plansWithLocations].reverse().slice(1, -1);
+            waypoints = '&waypoints=' + waypointsArr.join('|');
+        }
+
+        const url = `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}${waypoints}`;
+        window.open(url, '_blank');
+      },
+
+      movePlan(id, direction) {
+          const deliveries = this.state.deliveries || [];
+          const idx = deliveries.findIndex(d => d.DeliveryID === id);
+          if (idx === -1) return;
+
+          if (direction === 'UP' && idx < deliveries.length - 1) {
+              const temp = deliveries[idx];
+              deliveries[idx] = deliveries[idx + 1];
+              deliveries[idx + 1] = temp;
+          } else if (direction === 'DOWN' && idx > 0) {
+              const temp = deliveries[idx];
+              deliveries[idx] = deliveries[idx - 1];
+              deliveries[idx - 1] = temp;
+          }
+          this.renderPlans();
+      },
+
+      renderPlans() {
+        const container = document.getElementById('plan-list-admin');
+        const filterDate = document.getElementById('filter-plan-date').value;
+        const searchInput = document.getElementById('filter-plan-search').value.toLowerCase();
+
+        let plans = [...(this.state.deliveries || [])].reverse();
+
+        if (filterDate) {
+            plans = plans.filter(p => p.Date && p.Date.startsWith(filterDate));
+        }
+        if (searchInput) {
+            plans = plans.filter(p => {
+                const cust = (this.state.customers || []).find(c => c.CustomerID == p.CustomerID) || {};
+                const comp = (cust.CompanyName || '').toLowerCase();
+                const name = (cust.CustomerName || '').toLowerCase();
+                return comp.includes(searchInput) || name.includes(searchInput);
+            });
+        }
+        
+        if(plans.length === 0) {
+          container.innerHTML = `<div class="text-center p-4 text-gray-500 bg-white rounded-lg border border-dashed">ไม่พบแผนจัดส่งตามเงื่อนไข</div>`;
+          return;
+        }
+        
+        container.innerHTML = plans.slice(0, 50).map((task, renderIdx) => { 
+          const cust = (this.state.customers || []).find(c => c.CustomerID == task.CustomerID) || {};
+          const driver = (this.state.users || []).find(u => u.UserID == task.DriverID) || {};
+          
+          let statusColor = "bg-gray-100 text-gray-800";
+          if(task.Status === "กำลังไป") statusColor = "bg-blue-100 text-blue-700";
+          if(task.Status === "ถึงแล้ว") statusColor = "bg-orange-100 text-orange-700";
+          if(task.Status === "สำเร็จ") statusColor = "bg-green-100 text-green-700";
+          if(task.Status === "ไม่สำเร็จ") statusColor = "bg-red-100 text-red-700"; 
+          if(task.Status === "ยกเลิก") statusColor = "bg-gray-200 text-gray-500";
+
+          return `
+            <div class="plan-item bg-white p-4 rounded-xl shadow-sm border border-gray-200" data-id="${task.DeliveryID}">
+              <div class="flex justify-between items-start mb-2 gap-2">
+                <div>
+                  <span class="text-xs font-bold text-gray-500 border px-2 py-0.5 rounded bg-gray-50">${task.Date ? task.Date.split('T')[0] : '-'}</span>
+                  <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-purple-100 text-purple-700 ml-1 whitespace-nowrap">${task.JobType || 'ไม่ระบุ'}</span>
+                </div>
+                <div class="flex items-center gap-1">
+                  <div class="flex flex-col bg-gray-50 border rounded text-[8px] text-gray-500">
+                     <button onclick="App.movePlan('${task.DeliveryID}', 'UP')" class="px-2 py-0.5 hover:bg-gray-200 border-b">🔼</button>
+                     <button onclick="App.movePlan('${task.DeliveryID}', 'DOWN')" class="px-2 py-0.5 hover:bg-gray-200">🔽</button>
+                  </div>
+                  <select onchange="App.adminUpdatePlanStatus('${task.DeliveryID}', this.value)" class="text-[11px] font-bold border rounded p-1 outline-none ${statusColor}">
+                    <option value="รอดำเนินการ" ${task.Status==='รอดำเนินการ'?'selected':''}>รอดำเนินการ</option>
+                    <option value="กำลังไป" ${task.Status==='กำลังไป'?'selected':''}>กำลังไป</option>
+                    <option value="ถึงแล้ว" ${task.Status==='ถึงแล้ว'?'selected':''}>ถึงแล้ว</option>
+                    <option value="สำเร็จ" ${task.Status==='สำเร็จ'?'selected':''}>สำเร็จ</option>
+                    <option value="ไม่สำเร็จ" ${task.Status==='ไม่สำเร็จ'?'selected':''}>ไม่สำเร็จ</option>
+                    <option value="ยกเลิก" ${task.Status==='ยกเลิก'?'selected':''}>ยกเลิก</option>
+                  </select>
+                </div>
+              </div>
+              <h3 class="font-bold text-gray-800 text-sm mt-1">${cust.CompanyName ? cust.CompanyName+' - ' : ''}${cust.CustomerName || 'ไม่ทราบลูกค้า'}</h3>
+              <p class="text-xs text-gray-600 mt-1 flex items-center"><i data-lucide="user" class="w-3 h-3 mr-1"></i>คนส่ง: ${driver.Name || 'ไม่ระบุ'}</p>
+              <p class="text-xs text-gray-500 line-clamp-1 mt-1 flex items-center"><i data-lucide="package" class="w-3 h-3 mr-1 shrink-0"></i>${task.ItemDetails || '-'}</p>
+              ${task.InvoiceLink ? `<a href="${task.InvoiceLink}" target="_blank" class="text-[10px] text-blue-600 mt-1 inline-flex items-center hover:underline"><i data-lucide="file-text" class="w-3 h-3 mr-1"></i>ดู Invoice</a>` : ''}
+            </div>
+          `;
+        }).join('');
+        lucide.createIcons();
+      },
+
       filterPlanCustomers(keyword) {
         const dropdown = document.getElementById('plan-customer-dropdown');
         dropdown.classList.remove('hidden');
         
         const lowerKeyword = (keyword || '').toLowerCase();
-        const safeCustomers = this.state.customers || [];
-        
-        const filtered = safeCustomers.filter(c => {
+        const filtered = (this.state.customers || []).filter(c => {
             const comp = (c.CompanyName || '').toLowerCase();
             const name = (c.CustomerName || '').toLowerCase();
             return comp.includes(lowerKeyword) || name.includes(lowerKeyword);
@@ -615,21 +1350,17 @@
         }
 
         dropdown.innerHTML = filtered.map(c => {
-            const safeComp = (c.CompanyName || '').replace(/'/g, "\\'").replace(/"/g, '"');
-            const safeName = (c.CustomerName || '').replace(/'/g, "\\'").replace(/"/g, '"');
-            const safeDept = (c.Department || '').replace(/'/g, "\\'").replace(/"/g, '"'); 
+            const safeComp = (c.CompanyName || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            const safeName = (c.CustomerName || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            const safeDept = (c.Department || '').replace(/'/g, "\\'").replace(/"/g, '&quot;'); 
             
             let displayText = safeComp ? safeComp + ' - ' : ''; 
             displayText += safeName;
-            if (safeDept) {
-                displayText += ' - ' + safeDept;
-            }
+            if (safeDept) displayText += ' - ' + safeDept;
             
             return `
             <div class="p-3 border-b hover:bg-blue-50 cursor-pointer text-sm" onclick="App.selectPlanCustomer('${c.CustomerID}', '${displayText}')">
-                <p class="font-bold text-primary">
-                  ${c.CompanyName ? c.CompanyName + ' - ' : ''}${c.CustomerName}${c.Department ? ' - ' + c.Department : ''}
-                </p>
+                <p class="font-bold text-primary">${c.CompanyName ? c.CompanyName + ' - ' : ''}${c.CustomerName}${c.Department ? ' - ' + c.Department : ''}</p>
                 <p class="text-xs text-gray-500 truncate">${c.AddressText || ''}</p>
             </div>
             `;
@@ -642,11 +1373,38 @@
         document.getElementById('plan-customer-dropdown').classList.add('hidden');
       },
 
-      // --- Tasks (Driver) ---
+      async submitPlan() {
+        const cID = document.getElementById('plan-customer').value;
+        const dID = document.getElementById('plan-driver').value;
+        if(!cID || !dID) return this.showToast('กรุณาเลือกลูกค้าและคนขับ', 'warning');
+        
+        const invoiceFile = document.getElementById('plan-invoice').files[0];
+        const base64Invoice = await this.compressImage(invoiceFile);
+
+        const payload = { action: 'insert', sheet: 'Deliveries', data: {
+          DeliveryID: 'DEL-' + new Date().getTime(),
+          Date: document.getElementById('plan-date').value, CustomerID: cID, DriverID: dID,
+          VehicleID: document.getElementById('plan-vehicle').value,
+          ItemDetails: document.getElementById('plan-item').value, JobType: document.getElementById('plan-type').value, 
+          Status: 'รอดำเนินการ', InvoiceLink: base64Invoice || ""
+        }};
+        if (await this.postData(payload, 'บันทึกแผนและอัปโหลดเอกสาร...')) {
+          document.getElementById('plan-item').value = ''; document.getElementById('plan-invoice').value = '';
+          document.getElementById('plan-customer-search').value = ''; document.getElementById('plan-customer').value = '';
+          this.renderPlans();
+        }
+      },
+
+      async adminUpdatePlanStatus(deliveryId, newStatus) {
+         if(confirm(`ยืนยันเปลี่ยนสถานะเป็น "${newStatus}" ใช่หรือไม่?`)) {
+           const payload = { action: "update", sheet: "Deliveries", idField: "DeliveryID", idValue: deliveryId, data: { Status: newStatus } };
+           if(await this.postData(payload, 'กำลังอัปเดตสถานะ...')) this.renderPlans();
+         } else this.renderPlans();
+      },
+
       renderRouteList() {
         const container = document.getElementById('route-list');
-        // ใช้ String() ครอบเพื่อรับรองว่าชนิดข้อมูลตรงกันและไม่ดึงงานคนอื่นมาแสดง
-        const myTasks = (this.state.deliveries || []).filter(t => String(t.DriverID) === String(this.currentUser.UserID) && t.Status !== 'สำเร็จ' && t.Status !== 'ยกเลิก');
+        const myTasks = (this.state.deliveries || []).filter(t => String(t.DriverID) === String(this.currentUser.UserID) && t.Status !== 'สำเร็จ' && t.Status !== 'ไม่สำเร็จ' && t.Status !== 'ยกเลิก');
         
         if (myTasks.length === 0) {
           container.innerHTML = `<div class="text-center p-8 text-gray-500 bg-white rounded-xl border border-dashed border-gray-300">ไม่มีแผนงานค้างในขณะนี้</div>`;
@@ -666,10 +1424,7 @@
                 <span class="text-[10px] font-bold px-2 py-1 rounded-full border ${sColor}">${task.Status || 'รอดำเนินการ'}</span>
               </div>
               <h3 class="font-bold text-lg text-gray-800 leading-tight">${cust.CompanyName ? cust.CompanyName + '<br>' : ''}${cust.CustomerName || 'ไม่ทราบชื่อ'}</h3>
-              <p class="text-xs text-gray-500 mt-1 flex items-start gap-1">
-                <i data-lucide="map-pin" class="w-3 h-3 mt-0.5 shrink-0"></i>
-                <span class="line-clamp-1">${cust.AddressText || ''}</span>
-              </p>
+              <p class="text-xs text-gray-500 mt-1 flex items-start gap-1"><i data-lucide="map-pin" class="w-3 h-3 mt-0.5 shrink-0"></i><span class="line-clamp-1">${cust.AddressText || ''}</span></p>
             </div>
           `;
         }).join('');
@@ -680,14 +1435,13 @@
         this.currentTask = (this.state.deliveries || []).find(t => t.DeliveryID == deliveryId);
         const task = this.currentTask;
         const cust = (this.state.customers || []).find(c => c.CustomerID == task.CustomerID) || {};
+        const phoneStr = cust.Phone ? String(cust.Phone).replace(/'/g, '') : '';
         
         let mapBtn = '';
         if(cust.Latitude && cust.Longitude) {
-           mapBtn = `<button onclick="window.open('https://maps.google.com/?q=${cust.Latitude},${cust.Longitude}', '_blank')" class="mt-2 w-full flex items-center justify-center gap-2 bg-blue-50 text-blue-700 p-2 rounded-lg text-sm font-bold border border-blue-200"><i data-lucide="navigation" class="w-4 h-4"></i> นำทางด้วย Google Maps</button>`;
+           mapBtn = `<button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${cust.Latitude},${cust.Longitude}', '_blank')" class="mt-2 w-full flex items-center justify-center gap-2 bg-blue-50 text-blue-700 p-2 rounded-lg text-sm font-bold border border-blue-200"><i data-lucide="navigation" class="w-4 h-4"></i> นำทางด้วย Google Maps</button>`;
         }
         
-        const phoneStr = cust.Phone ? String(cust.Phone).replace(/'/g, '') : '';
-
         document.getElementById('task-detail-container').innerHTML = `
           <div>
             ${cust.CompanyName ? `<p class="text-sm font-bold text-gray-500">${cust.CompanyName}</p>` : ''}
@@ -695,20 +1449,9 @@
             <div class="inline-block mt-1 text-xs font-bold px-2 py-1 rounded-md bg-purple-100 text-purple-700">${task.JobType}</div>
           </div>
           <div class="text-sm text-gray-600 space-y-3 bg-gray-50 p-3 rounded-lg">
-            <div>
-              <p class="font-bold flex items-center gap-1 text-gray-700"><i data-lucide="map-pin" class="w-4 h-4"></i> ที่อยู่จัดส่ง:</p>
-              <p class="pl-5 text-gray-500">${cust.AddressText}</p>
-              ${mapBtn}
-            </div>
-            ${phoneStr ? `
-            <div>
-              <p class="font-bold flex items-center gap-1 text-gray-700"><i data-lucide="phone" class="w-4 h-4"></i> เบอร์โทรศัพท์:</p>
-              <p class="pl-5 text-blue-600 font-bold"><a href="tel:${phoneStr}" class="hover:underline text-lg">${phoneStr}</a></p>
-            </div>
-            ` : ''}
-            <div>
-              <p class="font-bold flex items-center gap-1 text-gray-700"><i data-lucide="package" class="w-4 h-4"></i> สินค้า:</p>
-              <p class="pl-5 text-gray-500">${task.ItemDetails}</p>
+            <div><p class="font-bold flex items-center gap-1 text-gray-700"><i data-lucide="map-pin" class="w-4 h-4"></i> ที่อยู่จัดส่ง:</p><p class="pl-5 text-gray-500">${cust.AddressText}</p>${mapBtn}</div>
+            ${phoneStr ? `<div><p class="font-bold flex items-center gap-1 text-gray-700"><i data-lucide="phone" class="w-4 h-4"></i> เบอร์โทรศัพท์:</p><p class="pl-5 text-blue-600 font-bold"><a href="tel:${phoneStr}" class="hover:underline text-lg">${phoneStr}</a></p></div>` : ''}
+            <div><p class="font-bold flex items-center gap-1 text-gray-700"><i data-lucide="package" class="w-4 h-4"></i> สินค้า:</p><p class="pl-5 text-gray-500">${task.ItemDetails}</p>
               ${task.InvoiceLink ? `<a href="${task.InvoiceLink}" target="_blank" class="ml-5 mt-2 inline-flex items-center gap-1 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded border border-blue-200 shadow-sm"><i data-lucide="file-text" class="w-3 h-3"></i> ดูเอกสาร Invoice</a>` : ''}
             </div>
           </div>
@@ -732,10 +1475,15 @@
           actionArea.innerHTML = `<button onclick="App.updateTaskStatus('ถึงแล้ว', 'ArrivalTime')" class="w-full bg-orange-500 text-white py-3 rounded-xl font-bold shadow flex justify-center items-center gap-2"><i data-lucide="map-pin" class="w-5 h-5"></i> ถึงสถานที่จัดส่ง</button>`;
         } else if (status === 'ถึงแล้ว') {
           formArea.classList.remove('hidden');
+          
+          const taskMileageInput = document.getElementById('task-mileage');
+          if (taskMileageInput) {
+             taskMileageInput.value = this.getLatestMileage(this.currentTask.VehicleID);
+          }
+
           if (!this.sigPad) {
             const canvas = document.getElementById('signature-pad');
-            canvas.width = canvas.parentElement.offsetWidth;
-            canvas.height = canvas.parentElement.offsetHeight;
+            canvas.width = canvas.parentElement.offsetWidth; canvas.height = canvas.parentElement.offsetHeight;
             this.sigPad = new SignaturePad(canvas, { backgroundColor: 'rgb(255, 255, 255)' });
           } else this.sigPad.clear();
         }
@@ -745,44 +1493,67 @@
       async updateTaskStatus(newStatus, timeField) {
         const payload = { action: "update", sheet: "Deliveries", idField: "DeliveryID", idValue: this.currentTask.DeliveryID, data: { Status: newStatus } };
         payload.data[timeField] = new Date().toISOString();
-
         if (await this.postData(payload, 'กำลังอัปเดตสถานะ...')) {
-          this.currentTask.Status = newStatus;
-          this.currentTask[timeField] = payload.data[timeField];
+          this.currentTask.Status = newStatus; this.currentTask[timeField] = payload.data[timeField];
           this.renderTaskActions();
         }
       },
 
-      async submitTaskComplete() {
-        if (this.sigPad.isEmpty()) return this.showToast('กรุณาเซ็นชื่อรับของ', 'warning');
+      async submitTaskComplete(isSuccess) {
+        const problemInput = document.getElementById('task-problem').value;
+        const currentMileage = document.getElementById('task-mileage').value;
+        
+        if (!isSuccess && !problemInput) {
+            return this.showToast('กรุณาระบุปัญหาที่พบ สำหรับการส่งไม่สำเร็จ', 'warning');
+        }
+        if (isSuccess && this.sigPad.isEmpty()) {
+            return this.showToast('กรุณาเซ็นชื่อรับของ', 'warning');
+        }
         
         const file = document.getElementById('task-photo').files[0];
+        if(isSuccess && !file) return this.showToast('กรุณาแนบภาพถ่าย', 'warning');
         const base64Photo = await this.compressImage(file);
-        const base64Sig = this.sigPad.toDataURL('image/jpeg', 0.8);
+        
+        let base64Sig = "";
+        if(isSuccess) base64Sig = this.sigPad.toDataURL('image/jpeg', 0.8);
 
         const payload = {
           action: "update", sheet: "Deliveries", idField: "DeliveryID", idValue: this.currentTask.DeliveryID,
-          data: { Status: 'สำเร็จ', ProblemNote: document.getElementById('task-problem').value, ImageLink: base64Photo || "", SignatureLink: base64Sig }
+          data: { 
+            Status: isSuccess ? 'สำเร็จ' : 'ไม่สำเร็จ', 
+            ProblemNote: problemInput, 
+            ImageLink: base64Photo || "", 
+            SignatureLink: base64Sig,
+            DropoffMileage: currentMileage 
+          }
         };
 
-        if (await this.postData(payload, 'กำลังปิดงานและอัปโหลดรูป...')) this.navigate('view-route');
+        if (await this.postData(payload, 'กำลังบันทึกข้อมูลการจัดส่ง...')) this.navigate('view-route');
       },
 
-      // --- Customers (Map manual & Search) ---
+      getLatestMileage(vehicleId) {
+          let maxMileage = 0;
+          const logs = (this.state.logs || []).filter(l => String(l.VehicleID) === String(vehicleId));
+          logs.forEach(l => {
+              const start = parseFloat(l.StartMileage) || 0;
+              const end = parseFloat(l.EndMileage) || 0;
+              if (start > maxMileage) maxMileage = start;
+              if (end > maxMileage) maxMileage = end;
+          });
+          const deliveries = (this.state.deliveries || []).filter(d => String(d.VehicleID) === String(vehicleId));
+          deliveries.forEach(d => {
+              const dropoff = parseFloat(d.DropoffMileage) || 0;
+              if (dropoff > maxMileage) maxMileage = dropoff;
+          });
+          return maxMileage > 0 ? maxMileage : '';
+      },
+
       splitLatLng(val) {
-        if (!val) {
-          document.getElementById('cust-lat').value = '';
-          document.getElementById('cust-lng').value = '';
-          return;
-        }
+        if (!val) { document.getElementById('cust-lat').value = ''; document.getElementById('cust-lng').value = ''; return; }
         const parts = val.split(',');
         if (parts.length >= 2) {
-          const lat = parseFloat(parts[0].replace(/[^0-9.-]/g, ''));
-          const lng = parseFloat(parts[1].replace(/[^0-9.-]/g, ''));
-          if (!isNaN(lat) && !isNaN(lng)) {
-            document.getElementById('cust-lat').value = lat.toFixed(6);
-            document.getElementById('cust-lng').value = lng.toFixed(6);
-          }
+          const lat = parseFloat(parts[0].replace(/[^0-9.-]/g, '')); const lng = parseFloat(parts[1].replace(/[^0-9.-]/g, ''));
+          if (!isNaN(lat) && !isNaN(lng)) { document.getElementById('cust-lat').value = lat.toFixed(6); document.getElementById('cust-lng').value = lng.toFixed(6); }
         }
       },
 
@@ -791,18 +1562,12 @@
           this.showToast('กำลังดึงพิกัด GPS...', 'info');
           navigator.geolocation.getCurrentPosition(
             (pos) => {
-              const lat = pos.coords.latitude;
-              const lng = pos.coords.longitude;
-              document.getElementById('cust-lat').value = lat.toFixed(6);
-              document.getElementById('cust-lng').value = lng.toFixed(6);
+              const lat = pos.coords.latitude; const lng = pos.coords.longitude;
+              document.getElementById('cust-lat').value = lat.toFixed(6); document.getElementById('cust-lng').value = lng.toFixed(6);
               document.getElementById('cust-latlng-input').value = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
               this.showToast('ดึงพิกัดสำเร็จ!', 'success');
-            },
-            (err) => this.showToast('ไม่สามารถดึงพิกัดได้ กรุณาเปิด GPS ในอุปกรณ์', 'error'),
-            { enableHighAccuracy: true }
+            }, (err) => this.showToast('ไม่สามารถดึงพิกัดได้', 'error'), { enableHighAccuracy: true }
           );
-        } else {
-          this.showToast('เบราว์เซอร์ของคุณไม่รองรับ GPS', 'error');
         }
       },
 
@@ -814,230 +1579,66 @@
         if(!name || !addr) return this.showToast('กรุณากรอกชื่อและที่อยู่', 'warning');
         
         const payload = { action: 'insert', sheet: 'Customers', data: {
-          CustomerID: 'CUS-' + new Date().getTime(),
-          CompanyName: company,
-          Department: department,
-          CustomerName: name, 
-          AddressText: addr,
-          Phone: "'" + document.getElementById('cust-phone').value,
-          Email: document.getElementById('cust-email').value,
-          Latitude: document.getElementById('cust-lat').value,
-          Longitude: document.getElementById('cust-lng').value
+          CustomerID: 'CUS-' + new Date().getTime(), CompanyName: company, Department: department, CustomerName: name, 
+          AddressText: addr, Phone: "'" + document.getElementById('cust-phone').value, Email: document.getElementById('cust-email').value,
+          Latitude: document.getElementById('cust-lat').value, Longitude: document.getElementById('cust-lng').value
         }};
 
         if (await this.postData(payload, 'กำลังบันทึกลูกค้า...')) {
-          document.getElementById('cust-company').value = '';
-          document.getElementById('cust-department').value = '';
-          document.getElementById('cust-name').value = '';
-          document.getElementById('cust-address').value = '';
-          document.getElementById('cust-phone').value = '';
-          document.getElementById('cust-email').value = '';
-          document.getElementById('cust-latlng-input').value = '';
-          document.getElementById('cust-lat').value = '';
-          document.getElementById('cust-lng').value = '';
-          if(document.getElementById('search-customer')) document.getElementById('search-customer').value = '';
+          ['cust-company','cust-department','cust-name','cust-address','cust-phone','cust-email','cust-latlng-input','cust-lat','cust-lng','search-customer'].forEach(id => {
+            if(document.getElementById(id)) document.getElementById(id).value = '';
+          });
           this.renderCustomers();
         }
       },
 
       renderCustomers(keyword) {
         const container = document.getElementById('customer-list');
-        const searchInput = document.getElementById('search-customer');
-        const actualKeyword = (typeof keyword === 'string') ? keyword : (searchInput ? searchInput.value : '');
-        const lowerKeyword = actualKeyword.toLowerCase();
+        const lowerKeyword = (keyword || document.getElementById('search-customer')?.value || '').toLowerCase();
         
-        const safeCustomers = this.state.customers || [];
-        const filteredCustomers = safeCustomers.filter(c => {
-            const comp = (c.CompanyName || '').toLowerCase();
-            const name = (c.CustomerName || '').toLowerCase();
-            return comp.includes(lowerKeyword) || name.includes(lowerKeyword);
+        const filtered = (this.state.customers || []).filter(c => {
+            return (c.CompanyName||'').toLowerCase().includes(lowerKeyword) || (c.CustomerName||'').toLowerCase().includes(lowerKeyword);
         });
 
-        if (filteredCustomers.length === 0) {
-            container.innerHTML = `<div class="text-center p-4 text-gray-500 bg-gray-50 rounded-lg text-sm border border-dashed">ไม่พบข้อมูลลูกค้า</div>`;
-            return;
-        }
+        if (filtered.length === 0) return container.innerHTML = `<div class="text-center p-4 text-gray-500 bg-gray-50 rounded-lg text-sm border border-dashed">ไม่พบข้อมูลลูกค้า</div>`;
 
-        container.innerHTML = filteredCustomers.map(c => `
+        container.innerHTML = filtered.map(c => `
           <div class="bg-white p-3 rounded-lg shadow-sm border text-sm">
             <p class="font-bold text-primary">รหัสลูกค้า: ${c.CustomerID || '-'}</p>
             <p class="font-bold text-gray-800 mt-1">${c.CompanyName ? c.CompanyName + ' - ' : ''}${c.Department ? c.Department + ' - ' : ''}${c.CustomerName}</p>
             <p class="text-gray-500 text-xs line-clamp-1">${c.AddressText}</p>
             ${c.Phone ? `<p class="text-gray-500 text-xs mt-1"><i data-lucide="phone" class="inline w-3 h-3 mr-1"></i>${String(c.Phone).replace(/'/g, '')}</p>` : ''}
-            ${c.Email ? `<p class="text-gray-500 text-xs"><i data-lucide="mail" class="inline w-3 h-3 mr-1"></i>${c.Email}</p>` : ''}
-            ${c.Latitude ? `<a href="https://maps.google.com/?q=${c.Latitude},${c.Longitude}" target="_blank" class="text-[10px] text-white bg-blue-600 px-2 py-1 rounded mt-2 inline-flex items-center shadow-sm hover:bg-blue-700"><i data-lucide="navigation" class="w-3 h-3 mr-1"></i>เปิดแอปนำทาง Google Maps</a>` : ''}
+            ${c.Latitude ? `<a href="https://maps.google.com/?q=${c.Latitude},${c.Longitude}" target="_blank" class="text-[10px] text-white bg-blue-600 px-2 py-1 rounded mt-2 inline-flex items-center shadow-sm hover:bg-blue-700"><i data-lucide="navigation" class="w-3 h-3 mr-1"></i>นำทาง Maps</a>` : ''}
           </div>
         `).join('');
         lucide.createIcons();
       },
 
-      // --- Vehicles ---
-      async submitVehicle() {
-        const plate = document.getElementById('veh-plate').value;
-        if(!plate) return;
-        const payload = { action: 'insert', sheet: 'Vehicles', data: { LicensePlate: plate, CurrentDriverID: document.getElementById('veh-driver').value, Status: 'Active' }};
-        if (await this.postData(payload, 'กำลังบันทึกรถ...')) {
-           document.getElementById('veh-plate').value = '';
-           this.renderVehicles();
-        }
-      },
-      renderVehicles() {
-        const container = document.getElementById('vehicle-list');
-        container.innerHTML = (this.state.vehicles || []).map(v => {
-          const d = (this.state.users || []).find(u => u.UserID == v.CurrentDriverID);
-          return `<div class="bg-white p-3 rounded-lg shadow-sm border border-gray-200 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-              <div class="bg-gray-100 p-2 rounded"><i data-lucide="car" class="w-5 h-5 text-gray-700"></i></div>
-              <div><p class="font-bold text-sm">${v.LicensePlate}</p><p class="text-xs text-gray-500">${d ? d.Name : 'ยังไม่ระบุคนขับ'}</p></div>
-            </div>
-          </div>`;
-        }).join('');
-        lucide.createIcons();
-      },
-
-      // --- Users Management (Admin) ---
       async submitUser() {
-        const u = document.getElementById('usr-username').value;
-        const p = document.getElementById('usr-password').value;
-        const n = document.getElementById('usr-name').value;
-        const r = document.getElementById('usr-role').value;
+        const u = document.getElementById('usr-username').value; const p = document.getElementById('usr-password').value; const n = document.getElementById('usr-name').value;
         if(!u || !p || !n) return this.showToast('กรอกข้อมูลให้ครบถ้วน', 'warning');
-
-        const payload = { action: 'insert', sheet: 'Users', data: {
-          UserID: 'USR-' + new Date().getTime(),
-          Username: u, Password: p, Name: n, Role: r, Status: 'Active'
-        }};
-
-        if (await this.postData(payload, 'กำลังบันทึกผู้ใช้งาน...')) {
-          document.getElementById('usr-username').value = '';
-          document.getElementById('usr-password').value = '';
-          document.getElementById('usr-name').value = '';
+        if (await this.postData({ action: 'insert', sheet: 'Users', data: { UserID: 'USR-' + new Date().getTime(), Username: u, Password: p, Name: n, Role: document.getElementById('usr-role').value, Status: 'Active' }}, 'บันทึกผู้ใช้งาน...')) {
+          ['usr-username','usr-password','usr-name'].forEach(id => document.getElementById(id).value = '');
           this.renderUsers();
         }
       },
 
       renderUsers() {
-        const container = document.getElementById('user-list');
-        container.innerHTML = (this.state.users || []).map(user => `
+        document.getElementById('user-list').innerHTML = (this.state.users || []).map(user => `
           <div class="bg-white p-3 rounded-lg shadow-sm border flex justify-between items-center text-sm">
-            <div>
-              <p class="font-bold text-primary flex items-center">${user.Name} <span class="text-[9px] bg-gray-200 text-gray-700 px-2 py-0.5 rounded ml-2">${user.Role}</span></p>
-              <p class="text-gray-500 text-xs mt-0.5">Username: ${user.Username}</p>
-            </div>
-            <div class="text-right">
-              <span class="text-[10px] font-bold px-2 py-1 rounded ${user.Status === 'Inactive' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}">${user.Status || 'Active'}</span>
-              <br>
-              ${user.UserID !== this.currentUser.UserID ? `<button onclick="App.toggleUserStatus('${user.UserID}', '${user.Status}')" class="mt-2 text-blue-600 hover:text-blue-800 text-[11px] font-bold underline">เปลี่ยนสถานะ</button>` : ''}
-            </div>
+            <div><p class="font-bold text-primary flex items-center">${user.Name} <span class="text-[9px] bg-gray-200 text-gray-700 px-2 py-0.5 rounded ml-2">${user.Role}</span></p><p class="text-gray-500 text-xs mt-0.5">Username: ${user.Username}</p></div>
+            <div class="text-right"><span class="text-[10px] font-bold px-2 py-1 rounded ${user.Status === 'Inactive' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}">${user.Status || 'Active'}</span><br>${user.UserID !== this.currentUser.UserID ? `<button onclick="App.toggleUserStatus('${user.UserID}', '${user.Status}')" class="mt-2 text-blue-600 hover:text-blue-800 text-[11px] font-bold underline">เปลี่ยนสถานะ</button>` : ''}</div>
           </div>
         `).join('');
       },
 
       async toggleUserStatus(userId, currentStatus) {
          const newStatus = (!currentStatus || currentStatus === 'Active') ? 'Inactive' : 'Active';
-         if(confirm(`ต้องการเปลี่ยนสถานะบัญชีนี้เป็น "${newStatus}" ใช่หรือไม่?\n(บัญชีที่ Inactive จะไม่สามารถเข้าสู่ระบบได้)`)) {
-            const payload = { action: "update", sheet: "Users", idField: "UserID", idValue: userId, data: { Status: newStatus } };
-            if(await this.postData(payload, 'กำลังอัปเดตสถานะ...')) {
-               this.renderUsers();
-            }
+         if(confirm(`ต้องการเปลี่ยนสถานะบัญชีนี้เป็น "${newStatus}" ใช่หรือไม่?`)) {
+            if(await this.postData({ action: "update", sheet: "Users", idField: "UserID", idValue: userId, data: { Status: newStatus } }, 'อัปเดตสถานะ...')) this.renderUsers();
          }
       },
 
-      // --- Plans & Dispatch ---
-      async submitPlan() {
-        const cID = document.getElementById('plan-customer').value;
-        const dID = document.getElementById('plan-driver').value;
-        
-        if(!cID || !dID) return this.showToast('กรุณาเลือกลูกค้าและคนขับ', 'warning');
-        
-        const invoiceFile = document.getElementById('plan-invoice').files[0];
-        const base64Invoice = await this.compressImage(invoiceFile);
-
-        const payload = { action: 'insert', sheet: 'Deliveries', data: {
-          Date: document.getElementById('plan-date').value, CustomerID: cID, DriverID: dID,
-          VehicleID: document.getElementById('plan-vehicle').value,
-          ItemDetails: document.getElementById('plan-item').value,
-          JobType: document.getElementById('plan-type').value, 
-          Status: 'รอดำเนินการ',
-          InvoiceLink: base64Invoice || ""
-        }};
-        if (await this.postData(payload, 'บันทึกแผนและอัปโหลดเอกสาร...')) {
-          document.getElementById('plan-item').value = '';
-          document.getElementById('plan-invoice').value = '';
-          document.getElementById('plan-customer-search').value = '';
-          document.getElementById('plan-customer').value = '';
-          this.renderPlans();
-        }
-      },
-
-      renderPlans() {
-        const container = document.getElementById('plan-list-admin');
-        const plans = [...(this.state.deliveries || [])].reverse().slice(0, 50);
-        
-        if(plans.length === 0) {
-          container.innerHTML = `<div class="text-center p-4 text-gray-500 bg-white rounded-lg">ไม่มีแผนจัดส่ง</div>`;
-          return;
-        }
-        
-        container.innerHTML = plans.map(task => {
-          const cust = (this.state.customers || []).find(c => c.CustomerID == task.CustomerID) || {};
-          const driver = (this.state.users || []).find(u => u.UserID == task.DriverID) || {};
-          
-          let statusColor = "bg-gray-100 text-gray-800";
-          if(task.Status === "กำลังไป") statusColor = "bg-blue-100 text-blue-700";
-          if(task.Status === "ถึงแล้ว") statusColor = "bg-orange-100 text-orange-700";
-          if(task.Status === "สำเร็จ") statusColor = "bg-green-100 text-green-700";
-          if(task.Status === "ยกเลิก") statusColor = "bg-red-100 text-red-700";
-
-          return `
-            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
-              <div class="flex justify-between items-start mb-2">
-                <div>
-                  <span class="text-xs font-bold text-gray-500 border px-2 py-0.5 rounded bg-gray-50">${task.Date ? task.Date.split('T')[0] : '-'}</span>
-                  <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-purple-100 text-purple-700 ml-1">${task.JobType || 'ไม่ระบุ'}</span>
-                </div>
-                <select onchange="App.adminUpdatePlanStatus('${task.DeliveryID}', this.value)" class="text-[11px] font-bold border rounded p-1 outline-none ${statusColor}">
-                  <option value="รอดำเนินการ" ${task.Status==='รอดำเนินการ'?'selected':''}>รอดำเนินการ</option>
-                  <option value="กำลังไป" ${task.Status==='กำลังไป'?'selected':''}>กำลังไป</option>
-                  <option value="ถึงแล้ว" ${task.Status==='ถึงแล้ว'?'selected':''}>ถึงแล้ว</option>
-                  <option value="สำเร็จ" ${task.Status==='สำเร็จ'?'selected':''}>สำเร็จ</option>
-                  <option value="ยกเลิก" ${task.Status==='ยกเลิก'?'selected':''}>ยกเลิก</option>
-                </select>
-              </div>
-              <h3 class="font-bold text-gray-800 text-sm mt-1">${cust.CustomerName || 'ไม่ทราบลูกค้า'}</h3>
-              <p class="text-xs text-gray-600 mt-1 flex items-center"><i data-lucide="user" class="w-3 h-3 mr-1"></i>คนส่ง: ${driver.Name || 'ไม่ระบุ'}</p>
-              <p class="text-xs text-gray-500 line-clamp-1 mt-1 flex items-center"><i data-lucide="package" class="w-3 h-3 mr-1 shrink-0"></i>${task.ItemDetails || '-'}</p>
-              ${task.InvoiceLink ? `<a href="${task.InvoiceLink}" target="_blank" class="text-[10px] text-blue-600 mt-1 inline-flex items-center hover:underline"><i data-lucide="file-text" class="w-3 h-3 mr-1"></i>ดู Invoice</a>` : ''}
-            </div>
-          `;
-        }).join('');
-        lucide.createIcons();
-      },
-
-      async adminUpdatePlanStatus(deliveryId, newStatus) {
-         if(confirm(`ยืนยันการเปลี่ยนสถานะแผนงานนี้เป็น "${newStatus}" ใช่หรือไม่?`)) {
-           const payload = { action: "update", sheet: "Deliveries", idField: "DeliveryID", idValue: deliveryId, data: { Status: newStatus } };
-           if(await this.postData(payload, 'กำลังอัปเดตสถานะ...')) {
-             this.renderPlans();
-           }
-         } else {
-           this.renderPlans();
-         }
-      },
-
-      // --- Mileage ---
-      async submitMileage() {
-        const start = document.getElementById('mile-start').value;
-        const end = document.getElementById('mile-end').value;
-        const veh = document.getElementById('mile-vehicle').value;
-        if(!start || !veh) return this.showToast('กรอกรถยนต์และเลขไมล์เริ่มให้ครบ', 'warning');
-        const payload = { action: 'insert', sheet: 'DailyLogs', data: { Date: document.getElementById('mile-date').value, DriverID: this.currentUser.UserID, VehicleID: veh, StartMileage: start, EndMileage: end }};
-        if (await this.postData(payload, 'บันทึกไมล์...')) {
-          if(end) { document.getElementById('mile-start').value = ''; document.getElementById('mile-end').value = ''; }
-        }
-      },
-
-      // --- Utils ---
       async compressImage(file) {
         if (!file) return null;
         return new Promise(resolve => {
@@ -1045,12 +1646,9 @@
           r.onload = e => {
             const img = new Image();
             img.onload = () => {
-              const cvs = document.createElement('canvas');
-              let w = img.width, h = img.height;
-              if (w > h && w > 800) { h *= 800 / w; w = 800; } 
-              else if (h > 800) { w *= 800 / h; h = 800; }
-              cvs.width = w; cvs.height = h;
-              cvs.getContext('2d').drawImage(img, 0, 0, w, h);
+              const cvs = document.createElement('canvas'); let w = img.width, h = img.height;
+              if (w > h && w > 800) { h *= 800 / w; w = 800; } else if (h > 800) { w *= 800 / h; h = 800; }
+              cvs.width = w; cvs.height = h; cvs.getContext('2d').drawImage(img, 0, 0, w, h);
               resolve(cvs.toDataURL('image/jpeg', 0.6));
             };
             img.src = e.target.result;
@@ -1058,18 +1656,16 @@
           r.readAsDataURL(file);
         });
       },
+
       setupEventListeners() {
         document.getElementById('task-photo').addEventListener('change', e => {
           const file = e.target.files[0]; const img = document.getElementById('photo-preview');
           if (file) { img.src = URL.createObjectURL(file); img.classList.remove('hidden'); } else img.classList.add('hidden');
         });
-        
         document.addEventListener('click', (e) => {
           const searchInput = document.getElementById('plan-customer-search');
           const dropdown = document.getElementById('plan-customer-dropdown');
-          if (searchInput && dropdown && !searchInput.contains(e.target) && !dropdown.contains(e.target)) {
-            dropdown.classList.add('hidden');
-          }
+          if (searchInput && dropdown && !searchInput.contains(e.target) && !dropdown.contains(e.target)) dropdown.classList.add('hidden');
         });
       },
       showLoader(m) { document.getElementById('loader-text').innerText = m; document.getElementById('loader-overlay').classList.replace('hidden', 'flex'); },
